@@ -21,7 +21,7 @@
     "speed",
     "cross-language"
   ],
-  "author": "Alya Language Team",
+  "author": "Alya Language Contributors <https://github.com/alya-lang>",
   "license": "MIT",
   "repository": {
     "type": "git",
