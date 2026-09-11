@@ -1,0 +1,21 @@
+# Compiled binaries and objects
+*.exe
+*.o
+*.s
+*.out
+*_alya
+*_alya.exe
+*_c
+*_c.exe
+
+# Temporary files
+*.tmp
+temp_*
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+bun.lock
+bun.lockb
+target/
