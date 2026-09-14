@@ -6,7 +6,7 @@ import * as path from "path";
 interface BenchConfig {
     id: string;
     name: string;
-    category: "Algorithms" | "Collections" | "Numeric" | "Strings";
+    category: "Algorithms" | "Collections" | "Numeric" | "Strings" | "Memory" | "Crypto" | "Bitwise";
     displayName: string;
     rootDisplayName: string;
     workload: string;
@@ -179,6 +179,54 @@ const BENCHMARKS: BenchConfig[] = [
         cSrc: "cross_lang/strings/str_hash.c",
         pySrc: "cross_lang/strings/str_hash.py",
         jsSrc: "cross_lang/strings/str_hash.js"
+    },
+
+    // 5. Memory & Dynamic Heap Allocation
+    {
+        id: "linked_list",
+        name: "Linked List Churn (50,000 nodes)",
+        category: "Memory",
+        displayName: "**Linked List Allocation**",
+        rootDisplayName: "**Linked List (50k nodes)**",
+        workload: "50k node alloc & traversal",
+        expected: "1249975000",
+        suite: "comprehensive",
+        alyaSrc: "cross_lang/memory/linked_list.alya",
+        cSrc: "cross_lang/memory/linked_list.c",
+        pySrc: "cross_lang/memory/linked_list.py",
+        jsSrc: "cross_lang/memory/linked_list.js"
+    },
+
+    // 6. Cryptography & Stream Ciphers
+    {
+        id: "rc4",
+        name: "RC4 Stream Cipher (100,000 bytes)",
+        category: "Crypto",
+        displayName: "**RC4 Stream Cipher**",
+        rootDisplayName: "**RC4 Cipher (100k bytes)**",
+        workload: "100k bytes KSA & PRGA stream",
+        expected: "12776054",
+        suite: "comprehensive",
+        alyaSrc: "cross_lang/crypto/rc4.alya",
+        cSrc: "cross_lang/crypto/rc4.c",
+        pySrc: "cross_lang/crypto/rc4.py",
+        jsSrc: "cross_lang/crypto/rc4.js"
+    },
+
+    // 7. Bitwise Operations & Low-Level Manipulation
+    {
+        id: "popcount",
+        name: "Kernighan Popcount (100,000 ints)",
+        category: "Bitwise",
+        displayName: "**Kernighan Popcount**",
+        rootDisplayName: "**Popcount (100k ints)**",
+        workload: "100k integers bit-clearing",
+        expected: "1549867",
+        suite: "comprehensive",
+        alyaSrc: "cross_lang/bitwise/popcount.alya",
+        cSrc: "cross_lang/bitwise/popcount.c",
+        pySrc: "cross_lang/bitwise/popcount.py",
+        jsSrc: "cross_lang/bitwise/popcount.js"
     }
 ];
 
@@ -594,7 +642,10 @@ ${results.map(r => `| ${r.displayName} | **${r.vsPy}** | ${r.vsBunMarkdown} | **
         { id: "mandelbrot", regex: /(### 8\. Mandelbrot Fractal[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ },
         { id: "matrix_mult", regex: /(### 9\. Matrix Multiplication[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ },
         { id: "monte_carlo", regex: /(### 10\. Monte Carlo Simulation[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ },
-        { id: "str_hash", regex: /(### 11\. FNV-1a String Hashing[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ }
+        { id: "str_hash", regex: /(### 11\. FNV-1a String Hashing[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ },
+        { id: "linked_list", regex: /(### 12\. Linked List Allocation[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ },
+        { id: "rc4", regex: /(### 13\. RC4 Stream Cipher[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ },
+        { id: "popcount", regex: /(### 14\. Kernighan Popcount[\s\S]*?\*\s*\*\*Result:\*\*)[^\r\n]*/ }
     ];
 
     for (const rep of detailReplacements) {

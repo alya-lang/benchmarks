@@ -1,0 +1,17 @@
+let total_bits = 0
+let seed = 42
+let n = 100000
+let i = 0
+while i < n
+    seed = (seed * 1103515245 + 12345) & 2147483647
+    let x = seed
+    let count = 0
+    while x > 0
+        x = x & (x - 1)
+        count = count + 1
+    end
+    total_bits = total_bits + count
+    i = i + 1
+end
+
+say total_bits

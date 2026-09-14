@@ -1,0 +1,20 @@
+struct ListNode
+    val, next
+end
+
+let count = 50000
+let head = null
+let i = 0
+while i < count
+    head = ListNode { val: i, next: head }
+    i = i + 1
+end
+
+let sum = 0
+let cur = head
+while cur != null
+    sum = sum + cur.val
+    cur = cur.next
+end
+
+say sum

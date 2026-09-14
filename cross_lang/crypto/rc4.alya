@@ -1,0 +1,39 @@
+let key = [83, 101, 99, 114, 101, 116, 65, 108, 121, 97, 75, 101, 121, 50, 48, 50, 54]
+let key_len = len(key)
+
+let s = []
+let k = 0
+while k < 256
+    s.push(k)
+    k = k + 1
+end
+
+let j = 0
+let i = 0
+while i < 256
+    j = (j + s[i] + key[i % key_len]) % 256
+    let tmp = s[i]
+    s[i] = s[j]
+    s[j] = tmp
+    i = i + 1
+end
+
+i = 0
+j = 0
+let checksum = 0
+let n = 100000
+let step = 0
+while step < n
+    i = (i + 1) % 256
+    j = (j + s[i]) % 256
+    let tmp2 = s[i]
+    s[i] = s[j]
+    s[j] = tmp2
+    let stream_byte = s[(s[i] + s[j]) % 256]
+    let data_byte = (step * 31) % 256
+    let cipher_byte = data_byte ^ stream_byte
+    checksum = checksum + cipher_byte
+    step = step + 1
+end
+
+say checksum

@@ -10,6 +10,9 @@
     "bench:collections": "bun run cross_lang/runner.ts --category collections",
     "bench:numeric": "bun run cross_lang/runner.ts --category numeric",
     "bench:strings": "bun run cross_lang/runner.ts --category strings",
+    "bench:memory": "bun run cross_lang/runner.ts --category memory",
+    "bench:crypto": "bun run cross_lang/runner.ts --category crypto",
+    "bench:bitwise": "bun run cross_lang/runner.ts --category bitwise",
     "bench:json": "bun run cross_lang/runner.ts --json",
     "bench:update": "bun run cross_lang/runner.ts --update-readme"
   },
