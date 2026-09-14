@@ -24,6 +24,9 @@ on:
           - 'collections'
           - 'numeric'
           - 'strings'
+          - 'memory'
+          - 'crypto'
+          - 'bitwise'
       mode:
         description: 'Benchmark Suite Mode'
         type: choice
