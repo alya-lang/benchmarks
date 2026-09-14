@@ -1,0 +1,120 @@
+{
+  "timestamp": "2026-09-14T20:34:54.450Z",
+  "iterations": 5,
+  "environment": {
+    "os": "Windows 11 Pro x64",
+    "gcc": "gcc (GCC) 16.2.0 (`-O2` optimization)",
+    "bun": "Bun 1.4.2 (JavaScriptCore JIT)",
+    "python": "Python 3.12.5",
+    "alya": "0.0.15",
+    "methodology": "1 warmup run, followed by 5 timed runs. Median execution time reported."
+  },
+  "summary": {
+    "totalBenchmarks": 4,
+    "geomeanSpeedupVsPython": 7.28,
+    "geomeanSpeedupVsBun": 1.6,
+    "geomeanOverheadVsC": 1.47
+  },
+  "benchmarks": [
+    {
+      "id": "fib",
+      "name": "Recursive Fibonacci (n=30)",
+      "category": "Algorithms",
+      "workload": "`fib(30)` (~2.69M calls)",
+      "executionTimeMs": {
+        "c": 12.4,
+        "alya": 16.9,
+        "bun": 28.9,
+        "python": 136.8
+      },
+      "relativeComparison": {
+        "vsC": "1.4x",
+        "vsPython": "8.1x faster",
+        "vsBun": "1.7x faster than Bun",
+        "speedupVsPythonMultiplier": 8.11,
+        "speedupVsBunMultiplier": 1.72,
+        "overheadVsCMultiplier": 1.36,
+        "efficiencyTier": "🟢 Near-C"
+      },
+      "binarySizeBytes": {
+        "alya": 92995,
+        "c": 55676
+      }
+    },
+    {
+      "id": "sieve",
+      "name": "Sieve of Eratosthenes (50,000)",
+      "category": "Algorithms",
+      "workload": "Primes under 50,000",
+      "executionTimeMs": {
+        "c": 10,
+        "alya": 14,
+        "bun": 24.9,
+        "python": 41.8
+      },
+      "relativeComparison": {
+        "vsC": "1.4x",
+        "vsPython": "3.0x faster",
+        "vsBun": "1.8x faster than Bun",
+        "speedupVsPythonMultiplier": 3,
+        "speedupVsBunMultiplier": 1.79,
+        "overheadVsCMultiplier": 1.4,
+        "efficiencyTier": "🟢 Near-C"
+      },
+      "binarySizeBytes": {
+        "alya": 93523,
+        "c": 54665
+      }
+    },
+    {
+      "id": "mandelbrot",
+      "name": "Mandelbrot Fractal (200x100x200)",
+      "category": "Numeric",
+      "workload": "200×100 grid, 200 iters",
+      "executionTimeMs": {
+        "c": 12.3,
+        "alya": 21.5,
+        "bun": 28.6,
+        "python": 115.3
+      },
+      "relativeComparison": {
+        "vsC": "1.7x",
+        "vsPython": "5.4x faster",
+        "vsBun": "1.3x faster than Bun",
+        "speedupVsPythonMultiplier": 5.36,
+        "speedupVsBunMultiplier": 1.33,
+        "overheadVsCMultiplier": 1.75,
+        "efficiencyTier": "🟢 Near-C"
+      },
+      "binarySizeBytes": {
+        "alya": 94073,
+        "c": 55742
+      }
+    },
+    {
+      "id": "str_hash",
+      "name": "FNV-1a String Hash (50,000 iters)",
+      "category": "Strings",
+      "workload": "50,000 hash calculations",
+      "executionTimeMs": {
+        "c": 12.9,
+        "alya": 18.5,
+        "bun": 29.7,
+        "python": 399
+      },
+      "relativeComparison": {
+        "vsC": "1.4x",
+        "vsPython": "21.6x faster",
+        "vsBun": "1.6x faster than Bun",
+        "speedupVsPythonMultiplier": 21.62,
+        "speedupVsBunMultiplier": 1.61,
+        "overheadVsCMultiplier": 1.43,
+        "efficiencyTier": "🟢 Near-C"
+      },
+      "binarySizeBytes": {
+        "alya": 97824,
+        "c": 55164
+      }
+    }
+  ]
+}

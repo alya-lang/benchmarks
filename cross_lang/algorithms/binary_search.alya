@@ -1,0 +1,38 @@
+function binary_search(arr, n, target)
+    let low = 0
+    let high = n - 1
+    while low <= high
+        let mid = (low + high) / 2
+        let val = arr[mid]
+        if val == target
+            return mid
+        elif val < target
+            low = mid + 1
+        else
+            high = mid - 1
+        end
+    end
+    return -1
+end
+
+let n = 100000
+let arr = []
+let i = 0
+while i < n
+    arr.push(i * 2)
+    i = i + 1
+end
+
+let idx_sum = 0
+let q = 0
+let queries = 50000
+while q < queries
+    let target = (q * 3) % 200000
+    let res = binary_search(arr, n, target)
+    if res >= 0
+        idx_sum = idx_sum + res
+    end
+    q = q + 1
+end
+
+say idx_sum

@@ -1,0 +1,26 @@
+function collatz_len(n)
+    let steps = 0
+    let cur = n
+    while cur > 1
+        if cur % 2 == 0
+            cur = cur / 2
+        else
+            cur = 3 * cur + 1
+        end
+        steps = steps + 1
+    end
+    return steps
+end
+
+let max_len = 0
+let i = 1
+let limit = 100000
+while i < limit
+    let len = collatz_len(i)
+    if len > max_len
+        max_len = len
+    end
+    i = i + 1
+end
+
+say max_len

@@ -1,6 +1,6 @@
 {
   "name": "alya-benchmarks",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cross-language performance benchmarks for the Alya programming language",
   "type": "module",
   "scripts": {
@@ -10,6 +10,7 @@
     "bench:collections": "bun run cross_lang/runner.ts --category collections",
     "bench:numeric": "bun run cross_lang/runner.ts --category numeric",
     "bench:strings": "bun run cross_lang/runner.ts --category strings",
+    "bench:json": "bun run cross_lang/runner.ts --json",
     "bench:update": "bun run cross_lang/runner.ts --update-readme"
   },
   "keywords": [
