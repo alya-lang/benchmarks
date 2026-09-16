@@ -12,7 +12,7 @@ function mandelbrot_point(cr, ci, max_iter)
         end
         zi = 2.0 * zr * zi + ci
         zr = zr2 - zi2 + cr
-        iter = iter + 1
+        iter += 1
     end
     return max_iter
 end
@@ -28,10 +28,10 @@ function compute_grid(width, height, max_iter)
         while x < width
             let cr = -2.0 + (3.0 * x) / width
             iters = mandelbrot_point(cr + 0.0, ci + 0.0, max_iter)
-            total = total + iters
-            x = x + 1
+            total += iters
+            x += 1
         end
-        y = y + 1
+        y += 1
     end
     return total
 end

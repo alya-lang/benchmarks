@@ -4,16 +4,16 @@ end
 
 function make_tree(item, depth)
     if depth == 0
-        return TreeNode { left: null, right: null, item: item }
+        return TreeNode(null, null, item)
     end
     let d = depth - 1
     let l = make_tree(2 * item - 1, d)
     let r = make_tree(2 * item, d)
-    return TreeNode { left: l, right: r, item: item }
+    return TreeNode(l, r, item)
 end
 
 function check_tree(node)
-    if node.left == null
+    if node.left is null
         return node.item
     end
     let l_chk = check_tree(node.left)
@@ -34,8 +34,8 @@ while depth <= max_depth
     let shift = max_depth - depth + 4
     let s = 0
     while s < shift
-        iterations = iterations * 2
-        s = s + 1
+        iterations *= 2
+        s += 1
     end
 
     let check = 0
@@ -43,12 +43,12 @@ while depth <= max_depth
     while i <= iterations
         let temp1 = make_tree(i, depth)
         let temp2 = make_tree(-i, depth)
-        check = check + check_tree(temp1) + check_tree(temp2)
-        i = i + 1
+        check += check_tree(temp1) + check_tree(temp2)
+        i += 1
     end
-    total = total + check
-    depth = depth + 2
+    total += check
+    depth += 2
 end
 
-total = total + check_tree(long_lived_tree)
+total += check_tree(long_lived_tree)
 say total

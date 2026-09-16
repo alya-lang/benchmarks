@@ -5,7 +5,7 @@ let s = []
 let k = 0
 while k < 256
     s.push(k)
-    k = k + 1
+    k += 1
 end
 
 let j = 0
@@ -15,7 +15,7 @@ while i < 256
     let tmp = s[i]
     s[i] = s[j]
     s[j] = tmp
-    i = i + 1
+    i += 1
 end
 
 i = 0
@@ -32,8 +32,8 @@ while step < n
     let stream_byte = s[(s[i] + s[j]) % 256]
     let data_byte = (step * 31) % 256
     let cipher_byte = data_byte ^ stream_byte
-    checksum = checksum + cipher_byte
-    step = step + 1
+    checksum += cipher_byte
+    step += 1
 end
 
 say checksum

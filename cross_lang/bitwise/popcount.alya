@@ -8,10 +8,10 @@ while i < n
     let count = 0
     while x > 0
         x = x & (x - 1)
-        count = count + 1
+        count += 1
     end
-    total_bits = total_bits + count
-    i = i + 1
+    total_bits += count
+    i += 1
 end
 
 say total_bits

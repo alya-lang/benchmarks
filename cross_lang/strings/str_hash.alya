@@ -5,6 +5,6 @@ let i = 0
 let h = 0
 while i < 50000
     h = fnv1a(sample)
-    i = i + 1
+    i += 1
 end
 say h

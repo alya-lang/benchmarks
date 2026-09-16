@@ -16,9 +16,9 @@ while i < n
     let y = seed
 
     if x * x + y * y <= 1073741824
-        total_in = total_in + 1
+        total_in += 1
     end
-    i = i + 1
+    i += 1
 end
 
 say total_in
