@@ -1,11 +1,11 @@
-let total_bits = 0
-let seed = 42
-let n = 100000
-let i = 0
+let total_bits: int = 0
+let seed: int = 42
+let n: int = 100000
+let i: int = 0
 while i < n
     seed = (seed * 1103515245 + 12345) & 2147483647
-    let x = seed
-    let count = 0
+    let x: int = seed
+    let count: int = 0
     while x > 0
         x = x & (x - 1)
         count += 1

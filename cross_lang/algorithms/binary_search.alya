@@ -1,6 +1,6 @@
-function binary_search(arr, n, target)
-    let low = 0
-    let high = n - 1
+function binary_search(arr: int[], n: int, target: int) -> int
+    let low: int = 0
+    let high: int = n - 1
     while low <= high
         let mid = (low + high) / 2
         let val = arr[mid]
@@ -13,17 +13,17 @@ function binary_search(arr, n, target)
     return -1
 end
 
-let n = 100000
-let arr = []
-let i = 0
+let n: int = 100000
+let arr: int[] = []
+let i: int = 0
 while i < n
     arr.push(i * 2)
     i += 1
 end
 
-let idx_sum = 0
-let q = 0
-let queries = 50000
+let idx_sum: int = 0
+let queries: int = 50000
+let q: int = 0
 while q < queries
     let target = (q * 3) % 200000
     let res = binary_search(arr, n, target)

@@ -1,6 +1,6 @@
-function collatz_len(n)
-    let steps = 0
-    let cur = n
+function collatz_len(n: int) -> int
+    let steps: int = 0
+    let cur: int = n
     while cur > 1
         cur = when cur % 2
             is 0 => cur / 2
@@ -11,11 +11,11 @@ function collatz_len(n)
     return steps
 end
 
-let max_len = 0
-let i = 1
-let limit = 100000
+let max_len: int = 0
+let i: int = 1
+let limit: int = 100000
 while i < limit
-    let len = collatz_len(i)
+    let len: int = collatz_len(i)
     if len > max_len
         max_len = len
     end

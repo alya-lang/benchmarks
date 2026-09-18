@@ -1,9 +1,9 @@
-let m = {}
-let n = 20000
+let m: [string: int] = {}
+let n: int = 20000
 
-let i = 0
+let i: int = 0
 while i < n
-    let k = "key_" + i
+    let k: string = f"key_{i}"
     m[k] = i * 3
     i += 1
 end
@@ -11,16 +11,16 @@ end
 i = 0
 while i < n
     if i % 2 == 0
-        let k = "key_" + i
+        let k: string = f"key_{i}"
         m[k] = i * 5
     end
     i += 1
 end
 
-let sum = 0
+let sum: int = 0
 i = 0
 while i < n
-    let k = "key_" + i
+    let k: string = f"key_{i}"
     sum += m[k]
     i += 1
 end

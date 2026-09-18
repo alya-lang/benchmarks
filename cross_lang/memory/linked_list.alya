@@ -1,17 +1,18 @@
 struct ListNode
-    val, next
+    val: int
+    next: ListNode?
 end
 
-let count = 50000
-let head = null
-let i = 0
+let count: int = 50000
+let head: ListNode? = null
+let i: int = 0
 while i < count
-    head = ListNode(i, head)
+    head = ListNode { val: i, next: head }
     i += 1
 end
 
-let sum = 0
-let cur = head
+let sum: int = 0
+let cur: ListNode? = head
 while cur is not null
     sum += cur.val
     cur = cur.next

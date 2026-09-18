@@ -1,8 +1,8 @@
-function partition(arr, low, high)
-    let pivot = arr[high]
-    let i = low - 1
-    let j = low
-    let temp = 0
+function partition(arr: int[], low: int, high: int) -> int
+    let pivot: int = arr[high]
+    let i: int = low - 1
+    let j: int = low
+    let temp: int = 0
     while j < high
         if arr[j] <= pivot
             i += 1
@@ -18,18 +18,18 @@ function partition(arr, low, high)
     return i + 1
 end
 
-function quicksort(arr, low, high)
+function quicksort(arr: int[], low: int, high: int)
     if low < high
-        let pi = partition(arr, low, high)
+        let pi: int = partition(arr, low, high)
         quicksort(arr, low, pi - 1)
         quicksort(arr, pi + 1, high)
     end
 end
 
-let arr = []
-let seed = 42
-let i = 0
-let n = 50000
+let arr: int[] = []
+let seed: int = 42
+let i: int = 0
+let n: int = 50000
 while i < n
     seed = (seed * 1103515245 + 12345) % 1000000
     if seed < 0
@@ -41,5 +41,5 @@ end
 
 quicksort(arr, 0, n - 1)
 
-let checksum = arr[0] + arr[25000] + arr[n - 1]
+let checksum: int = arr[0] + arr[25000] + arr[n - 1]
 say checksum

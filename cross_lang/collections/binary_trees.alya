@@ -1,48 +1,50 @@
 struct TreeNode
-    left, right, item
+    left: TreeNode?
+    right: TreeNode?
+    item: int
 end
 
-function make_tree(item, depth)
+function make_tree(item: int, depth: int) -> TreeNode
     if depth == 0
-        return TreeNode(null, null, item)
+        return TreeNode { left: null, right: null, item: item }
     end
-    let d = depth - 1
-    let l = make_tree(2 * item - 1, d)
-    let r = make_tree(2 * item, d)
-    return TreeNode(l, r, item)
+    let d: int = depth - 1
+    let l: TreeNode = make_tree(2 * item - 1, d)
+    let r: TreeNode = make_tree(2 * item, d)
+    return TreeNode { left: l, right: r, item: item }
 end
 
-function check_tree(node)
+function check_tree(node: TreeNode) -> int
     if node.left is null
         return node.item
     end
-    let l_chk = check_tree(node.left)
-    let r_chk = check_tree(node.right)
+    let l_chk: int = check_tree(node.left)
+    let r_chk: int = check_tree(node.right)
     return node.item + l_chk - r_chk
 end
 
-let max_depth = 14
-let stretch_tree = make_tree(0, max_depth + 1)
-let stretch_check = check_tree(stretch_tree)
+let max_depth: int = 14
+let stretch_tree: TreeNode = make_tree(0, max_depth + 1)
+let stretch_check: int = check_tree(stretch_tree)
 
-let long_lived_tree = make_tree(0, max_depth)
+let long_lived_tree: TreeNode = make_tree(0, max_depth)
 
-let total = stretch_check
-let depth = 4
+let total: int = stretch_check
+let depth: int = 4
 while depth <= max_depth
-    let iterations = 1
-    let shift = max_depth - depth + 4
-    let s = 0
+    let iterations: int = 1
+    let shift: int = max_depth - depth + 4
+    let s: int = 0
     while s < shift
         iterations *= 2
         s += 1
     end
 
-    let check = 0
-    let i = 1
+    let check: int = 0
+    let i: int = 1
     while i <= iterations
-        let temp1 = make_tree(i, depth)
-        let temp2 = make_tree(-i, depth)
+        let temp1: TreeNode = make_tree(i, depth)
+        let temp2: TreeNode = make_tree(-i, depth)
         check += check_tree(temp1) + check_tree(temp2)
         i += 1
     end
