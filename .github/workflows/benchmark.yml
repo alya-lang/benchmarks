@@ -128,7 +128,7 @@ jobs:
 
       - name: Verify Alya compiler
         shell: bash
-        run: alyac --version
+        run: alya --version
 
       - name: Run cross-language benchmarks
         shell: bash

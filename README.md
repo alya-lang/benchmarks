@@ -13,7 +13,7 @@ All implementations solve the exact same algorithmic problem on identical inputs
 * **C Compiler:** gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 (`-O2` optimization)
 * **JavaScript Engine:** Bun 1.4.2 (JavaScriptCore JIT)
 * **Python Runtime:** Python 3.12.14
-* **Alya Version:** 0.0.15 (Compiled with `alyac build` in Release mode)
+* **Alya Version:** 0.0.18 (Compiled with `alya build` in Release mode)
 * **Measurement Methodology:** 1 warmup run, followed by 10 timed runs. Median execution time reported.
 
 ---
@@ -221,26 +221,26 @@ cargo bench --bench compiler_bench
 ### Run Individual Alya Benchmarks
 ```bash
 # Algorithms
-alyac run cross_lang/algorithms/fibonacci.alya
-alyac run cross_lang/algorithms/quicksort.alya
-alyac run cross_lang/algorithms/sieve.alya
-alyac run cross_lang/algorithms/collatz.alya
-alyac run cross_lang/algorithms/binary_search.alya
+alya run cross_lang/algorithms/fibonacci.alya
+alya run cross_lang/algorithms/quicksort.alya
+alya run cross_lang/algorithms/sieve.alya
+alya run cross_lang/algorithms/collatz.alya
+alya run cross_lang/algorithms/binary_search.alya
 
 # Collections & Data Structures
-alyac run cross_lang/collections/binary_trees.alya
-alyac run cross_lang/collections/hash_map.alya
+alya run cross_lang/collections/binary_trees.alya
+alya run cross_lang/collections/hash_map.alya
 
 # Numeric & Math
-alyac run cross_lang/numeric/mandelbrot.alya
-alyac run cross_lang/numeric/matrix_mult.alya
-alyac run cross_lang/numeric/monte_carlo.alya
+alya run cross_lang/numeric/mandelbrot.alya
+alya run cross_lang/numeric/matrix_mult.alya
+alya run cross_lang/numeric/monte_carlo.alya
 
 # Strings & Hashing
-alyac run cross_lang/strings/str_hash.alya
+alya run cross_lang/strings/str_hash.alya
 
 # Run with profiling enabled
-alyac run cross_lang/algorithms/fibonacci.alya --time
+alya run cross_lang/algorithms/fibonacci.alya --time
 ```
 
 ---

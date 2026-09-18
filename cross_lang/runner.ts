@@ -252,15 +252,15 @@ function getAlyaCompiler(): string {
         return path.resolve(process.env.ALYA_COMPILER);
     }
 
-    // 2. Local bin or target/release/alyac
-    const localTarget = path.resolve(`target/release/alyac${exeExt}`);
+    // 2. Local bin or target/release/alya
+    const localTarget = path.resolve(`target/release/alya${exeExt}`);
     if (fs.existsSync(localTarget)) return localTarget;
 
     // 3. Sibling repo targets
     const siblingTargets = [
-        path.resolve(__dirname, `../../Src/alya/target/release/alyac${exeExt}`),
-        path.resolve(__dirname, `../../../Src/alya/target/release/alyac${exeExt}`),
-        path.resolve(__dirname, `../../alya/target/release/alyac${exeExt}`)
+        path.resolve(__dirname, `../../Src/alya/target/release/alya${exeExt}`),
+        path.resolve(__dirname, `../../../Src/alya/target/release/alya${exeExt}`),
+        path.resolve(__dirname, `../../alya/target/release/alya${exeExt}`)
     ];
     for (const st of siblingTargets) {
         if (fs.existsSync(st)) return st;
@@ -268,13 +268,13 @@ function getAlyaCompiler(): string {
 
     // 4. In PATH
     try {
-        const res = spawnSync(`alyac${exeExt}`, ["--version"], { encoding: "utf-8" });
+        const res = spawnSync(`alya${exeExt}`, ["--version"], { encoding: "utf-8" });
         if (res.status === 0) {
-            return `alyac${exeExt}`;
+            return `alya${exeExt}`;
         }
     } catch {}
 
-    return `alyac${exeExt}`;
+    return `alya${exeExt}`;
 }
 
 function ensureAlyaCompiler(): string {
@@ -290,14 +290,14 @@ function ensureAlyaCompiler(): string {
         console.log("Compiling Alya compiler in release mode (`cargo build --release`)...");
         const buildRes = spawnSync("cargo", ["build", "--release"], { stdio: "inherit" });
         if (buildRes.status === 0) {
-            const localTarget = path.resolve(`target/release/alyac${process.platform === "win32" ? ".exe" : ""}`);
+            const localTarget = path.resolve(`target/release/alya${process.platform === "win32" ? ".exe" : ""}`);
             if (fs.existsSync(localTarget)) return localTarget;
         }
     }
 
-    console.error(`[ERROR] Alya compiler (alyac) not found or not executable.`);
-    console.error(`Please install alyac into your PATH or set the ALYA_COMPILER environment variable.`);
-    console.error(`Example: export ALYA_COMPILER=/path/to/alyac`);
+    console.error(`[ERROR] Alya compiler not found or not executable.`);
+    console.error(`Please install alya into your PATH or set the ALYA_COMPILER environment variable.`);
+    console.error(`Example: export ALYA_COMPILER=/path/to/alya`);
     process.exit(1);
 }
 
@@ -391,10 +391,10 @@ function getTestEnvironment(alyaCompiler: string, pyCmd: string, iters: number):
         if (ver) pyVer = ver;
     } catch {}
 
-    let alyaVer = "0.0.15";
+    let alyaVer = "0.0.18";
     try {
         const res = spawnSync(alyaCompiler, ["--version"], { encoding: "utf-8" });
-        const match = (res.stdout || "").match(/alyac\s+([0-9.]+)/);
+        const match = (res.stdout || "").match(/alya\s+([0-9.]+)/);
         if (match) {
             alyaVer = match[1];
         } else if (fs.existsSync(path.resolve("Cargo.toml"))) {
@@ -564,7 +564,7 @@ function saveResultsJson(results: DetailedBenchResult[], env: ReturnType<typeof 
     console.log(`[INFO] Saved benchmark results JSON to ${targetFile}`);
 }
 
-function updateBenchReadme(results: DetailedBenchResult[], compilerRows?: string[], alyaCompiler: string = "alyac", pyCmd: string = "python", iters: number = 5) {
+function updateBenchReadme(results: DetailedBenchResult[], compilerRows?: string[], alyaCompiler: string = "alya", pyCmd: string = "python", iters: number = 5) {
     const readmePath = findReadmePath();
     if (!readmePath) {
         console.error("Cannot find README.md to update.");
@@ -574,7 +574,7 @@ function updateBenchReadme(results: DetailedBenchResult[], compilerRows?: string
 
     // 1. Update Test Environment
     const env = getTestEnvironment(alyaCompiler, pyCmd, iters);
-    const envBlock = `### Test Environment\n* **Operating System:** ${env.os}\n* **C Compiler:** ${env.gcc}\n* **JavaScript Engine:** ${env.bun}\n* **Python Runtime:** ${env.python}\n* **Alya Version:** ${env.alya} (Compiled with \`alyac build\` in Release mode)\n* **Measurement Methodology:** ${env.methodology}`;
+    const envBlock = `### Test Environment\n* **Operating System:** ${env.os}\n* **C Compiler:** ${env.gcc}\n* **JavaScript Engine:** ${env.bun}\n* **Python Runtime:** ${env.python}\n* **Alya Version:** ${env.alya} (Compiled with \`alya build\` in Release mode)\n* **Measurement Methodology:** ${env.methodology}`;
     content = content.replace(/### Test Environment[\s\S]*?(?=\r?\n\r?\n---)/, envBlock);
 
     // Compute Geomeans
