@@ -17,15 +17,21 @@ end
 
 i = 0
 while i < n
+    let row_a: int = i * n
     let j: int = 0
     while j < n
         let sum: int = 0
         let k: int = 0
+        let unroll_limit: int = n - 3
+        while k < unroll_limit
+            sum += (a[row_a + k] * b[k * n + j]) + (a[row_a + k + 1] * b[(k + 1) * n + j]) + (a[row_a + k + 2] * b[(k + 2) * n + j]) + (a[row_a + k + 3] * b[(k + 3) * n + j])
+            k += 4
+        end
         while k < n
-            sum += a[i * n + k] * b[k * n + j]
+            sum += a[row_a + k] * b[k * n + j]
             k += 1
         end
-        c[i * n + j] = sum
+        c[row_a + j] = sum
         j += 1
     end
     i += 1
