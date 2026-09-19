@@ -14,7 +14,10 @@ function make_tree(item: int, depth: int) -> TreeNode
     return TreeNode { left: l, right: r, item: item }
 end
 
-function check_tree(node: TreeNode) -> int
+function check_tree(node: TreeNode?) -> int
+    if node is null
+        return 0
+    end
     if node.left is null
         return node.item
     end
