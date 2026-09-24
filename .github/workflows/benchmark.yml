@@ -10,8 +10,11 @@ on:
         default: 'ubuntu-latest'
         options:
           - 'ubuntu-latest'
+          - 'ubuntu-24.04-arm'
           - 'windows-latest'
+          - 'windows-11-arm'
           - 'macos-latest'
+          - 'macos-15-intel'
           - 'all'
       category:
         description: 'Benchmark Category'
@@ -78,7 +81,7 @@ jobs:
             TARGET_OS="ubuntu-latest"
           fi
           if [ "$TARGET_OS" = "all" ]; then
-            echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"]}' >> "$GITHUB_OUTPUT"
+            echo 'matrix={"os":["ubuntu-latest","ubuntu-24.04-arm","windows-latest","windows-11-arm","macos-latest","macos-15-intel"]}' >> "$GITHUB_OUTPUT"
           else
             echo "matrix={\"os\":[\"$TARGET_OS\"]}" >> "$GITHUB_OUTPUT"
           fi

@@ -352,9 +352,9 @@ function computeGeomean(numbers: number[]): number {
 }
 
 function getTestEnvironment(alyaCompiler: string, pyCmd: string, iters: number): { os: string; gcc: string; bun: string; python: string; alya: string; methodology: string } {
-    let osName = "Windows 11 Pro x64";
+    let osName = `Windows 11 Pro (${process.arch})`;
     if (process.platform === "win32") {
-        osName = "Windows 11 Pro x64";
+        osName = `Windows 11 Pro (${process.arch})`;
     } else if (process.platform === "darwin") {
         osName = `macOS (${process.arch})`;
     } else {
@@ -391,7 +391,7 @@ function getTestEnvironment(alyaCompiler: string, pyCmd: string, iters: number):
         if (ver) pyVer = ver;
     } catch {}
 
-    let alyaVer = "0.0.18";
+    let alyaVer = "0.0.19";
     try {
         const res = spawnSync(alyaCompiler, ["--version"], { encoding: "utf-8" });
         const match = (res.stdout || "").match(/alya\s+([0-9.]+)/);
