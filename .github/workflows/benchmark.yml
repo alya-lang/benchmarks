@@ -127,11 +127,27 @@ jobs:
         run: |
           cd alya-compiler
           cargo build --release
-          echo "$(pwd)/target/release" >> $GITHUB_PATH
+          TARGET_DIR="$(pwd)/target/release"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            TARGET_DIR="$(cygpath -w "$TARGET_DIR")"
+            echo "ALYA_COMPILER=$TARGET_DIR\\alya.exe" >> $GITHUB_ENV
+          else
+            echo "ALYA_COMPILER=$TARGET_DIR/alya" >> $GITHUB_ENV
+          fi
+          echo "$TARGET_DIR" >> $GITHUB_PATH
 
-      - name: Verify Alya compiler
+      - name: Verify Alya compiler & Toolchain
         shell: bash
-        run: alya --version
+        run: |
+          alya --version
+          alya toolchain install || true
+          if [ -d "$HOME/.alya/toolchain/bin" ]; then
+            TOOLCHAIN_DIR="$HOME/.alya/toolchain/bin"
+            if [[ "$RUNNER_OS" == "Windows" ]]; then
+              TOOLCHAIN_DIR="$(cygpath -w "$TOOLCHAIN_DIR")"
+            fi
+            echo "$TOOLCHAIN_DIR" >> $GITHUB_PATH
+          fi
 
       - name: Run cross-language benchmarks
         shell: bash

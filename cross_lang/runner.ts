@@ -244,26 +244,51 @@ function resolveBenchPath(p: string): string {
     return path.resolve(p);
 }
 
+function normalizePath(p: string): string {
+    if (process.platform === "win32") {
+        // Handle Git Bash POSIX paths like /c/foo or /d/foo -> C:/foo or D:/foo
+        const m = p.match(/^\/([a-zA-Z])\/(.*)$/);
+        if (m) {
+            return `${m[1].toUpperCase()}:/${m[2]}`;
+        }
+    }
+    return p;
+}
+
 function getAlyaCompiler(): string {
     const exeExt = process.platform === "win32" ? ".exe" : "";
 
     // 1. Env variable ALYA_COMPILER
-    if (process.env.ALYA_COMPILER && fs.existsSync(process.env.ALYA_COMPILER)) {
-        return path.resolve(process.env.ALYA_COMPILER);
+    if (process.env.ALYA_COMPILER) {
+        const normalized = normalizePath(process.env.ALYA_COMPILER);
+        if (fs.existsSync(normalized)) {
+            return path.resolve(normalized);
+        }
+        if (fs.existsSync(normalized + exeExt)) {
+            return path.resolve(normalized + exeExt);
+        }
     }
 
-    // 2. Local bin or target/release/alya
-    const localTarget = path.resolve(`target/release/alya${exeExt}`);
-    if (fs.existsSync(localTarget)) return localTarget;
-
-    // 3. Sibling repo targets
-    const siblingTargets = [
+    // 2. Candidate paths in repo / submodules / workspaces
+    const candidates = [
+        path.resolve(`target/release/alya${exeExt}`),
+        path.resolve(`alya-compiler/target/release/alya${exeExt}`),
+        path.resolve(__dirname, `../target/release/alya${exeExt}`),
+        path.resolve(__dirname, `../alya-compiler/target/release/alya${exeExt}`),
+        path.resolve(__dirname, `../../alya-compiler/target/release/alya${exeExt}`),
         path.resolve(__dirname, `../../Src/alya/target/release/alya${exeExt}`),
         path.resolve(__dirname, `../../../Src/alya/target/release/alya${exeExt}`),
-        path.resolve(__dirname, `../../alya/target/release/alya${exeExt}`)
+        path.resolve(__dirname, `../../alya/target/release/alya${exeExt}`),
     ];
-    for (const st of siblingTargets) {
-        if (fs.existsSync(st)) return st;
+    for (const c of candidates) {
+        if (fs.existsSync(c)) return c;
+    }
+
+    // 3. User local ~/.alya/bin
+    const home = process.env.HOME || process.env.USERPROFILE || "";
+    if (home) {
+        const homeBin = path.join(home, `.alya/bin/alya${exeExt}`);
+        if (fs.existsSync(homeBin)) return homeBin;
     }
 
     // 4. In PATH
@@ -271,6 +296,13 @@ function getAlyaCompiler(): string {
         const res = spawnSync(`alya${exeExt}`, ["--version"], { encoding: "utf-8" });
         if (res.status === 0) {
             return `alya${exeExt}`;
+        }
+    } catch {}
+
+    try {
+        const res = spawnSync("alya", ["--version"], { encoding: "utf-8" });
+        if (res.status === 0) {
+            return "alya";
         }
     } catch {}
 
@@ -286,11 +318,19 @@ function ensureAlyaCompiler(): string {
         }
     } catch {}
 
+    const exeExt = process.platform === "win32" ? ".exe" : "";
     if (fs.existsSync(path.resolve("Cargo.toml"))) {
         console.log("Compiling Alya compiler in release mode (`cargo build --release`)...");
         const buildRes = spawnSync("cargo", ["build", "--release"], { stdio: "inherit" });
         if (buildRes.status === 0) {
-            const localTarget = path.resolve(`target/release/alya${process.platform === "win32" ? ".exe" : ""}`);
+            const localTarget = path.resolve(`target/release/alya${exeExt}`);
+            if (fs.existsSync(localTarget)) return localTarget;
+        }
+    } else if (fs.existsSync(path.resolve("alya-compiler/Cargo.toml"))) {
+        console.log("Compiling Alya compiler in release mode (`cargo build --release` in alya-compiler)...");
+        const buildRes = spawnSync("cargo", ["build", "--release"], { cwd: path.resolve("alya-compiler"), stdio: "inherit" });
+        if (buildRes.status === 0) {
+            const localTarget = path.resolve(`alya-compiler/target/release/alya${exeExt}`);
             if (fs.existsSync(localTarget)) return localTarget;
         }
     }
@@ -299,6 +339,43 @@ function ensureAlyaCompiler(): string {
     console.error(`Please install alya into your PATH or set the ALYA_COMPILER environment variable.`);
     console.error(`Example: export ALYA_COMPILER=/path/to/alya`);
     process.exit(1);
+}
+
+function getGccCmd(): string {
+    if (process.env.CC) {
+        const norm = normalizePath(process.env.CC);
+        if (fs.existsSync(norm)) return norm;
+        try {
+            const res = spawnSync(norm, ["--version"], { encoding: "utf-8" });
+            if (res.status === 0) return norm;
+        } catch {}
+    }
+
+    const exeExt = process.platform === "win32" ? ".exe" : "";
+    const home = process.env.HOME || process.env.USERPROFILE || "";
+    const candidates = [
+        "gcc",
+        "clang",
+        path.join(home, `.alya/toolchain/bin/gcc${exeExt}`),
+        path.join(home, `.alya/toolchain/bin/clang${exeExt}`),
+        path.join(home, `.alya/toolchain/bin/aarch64-w64-mingw32-gcc${exeExt}`),
+        path.join(home, `.alya/toolchain/bin/x86_64-w64-mingw32-gcc${exeExt}`),
+        "C:\\ProgramData\\Chocolatey\\bin\\gcc.exe",
+        "C:\\msys64\\mingw64\\bin\\gcc.exe",
+        "C:\\msys64\\ucrt64\\bin\\gcc.exe",
+        "C:\\msys64\\clang64\\bin\\clang.exe",
+        "C:\\msys64\\clangarm64\\bin\\clang.exe",
+    ];
+
+    for (const cmd of candidates) {
+        try {
+            if (cmd.includes(path.sep) && !fs.existsSync(cmd)) continue;
+            const res = spawnSync(cmd, ["--version"], { encoding: "utf-8" });
+            if (res.status === 0) return cmd;
+        } catch {}
+    }
+
+    return "gcc";
 }
 
 function getPythonCmd(): string {
@@ -370,7 +447,8 @@ function getTestEnvironment(alyaCompiler: string, pyCmd: string, iters: number):
 
     let gccVer = "GCC (-O2 optimization)";
     try {
-        const res = spawnSync("gcc", ["--version"], { encoding: "utf-8" });
+        const gccCmd = getGccCmd();
+        const res = spawnSync(gccCmd, ["--version"], { encoding: "utf-8" });
         const firstLine = (res.stdout || "").split("\n")[0].trim();
         if (firstLine) {
             gccVer = `${firstLine} (\`-O2\` optimization)`;
@@ -770,7 +848,8 @@ async function main() {
 
         // 2. Compile C with GCC -O2
         const cExe = cSrcPath.replace(/\.c$/, `_c${exeExt}`);
-        const cBuild = spawnSync("gcc", ["-O2", cSrcPath, "-o", cExe], { encoding: "utf-8" });
+        const gccCmd = getGccCmd();
+        const cBuild = spawnSync(gccCmd, ["-O2", cSrcPath, "-o", cExe], { encoding: "utf-8" });
         if (cBuild.status !== 0) {
             console.error(`\nFailed to compile ${cSrcPath}:\n${cBuild.stderr}`);
             try { fs.unlinkSync(alyaExe); } catch {}
