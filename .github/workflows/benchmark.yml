@@ -140,13 +140,15 @@ jobs:
         shell: bash
         run: |
           alya --version
-          alya toolchain install || true
-          if [ -d "$HOME/.alya/toolchain/bin" ]; then
-            TOOLCHAIN_DIR="$HOME/.alya/toolchain/bin"
-            if [[ "$RUNNER_OS" == "Windows" ]]; then
-              TOOLCHAIN_DIR="$(cygpath -w "$TOOLCHAIN_DIR")"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "Windows runner detected: ensuring portable GCC toolchain is installed..."
+            alya toolchain install || true
+            if [ -d "$HOME/.alya/toolchain/bin" ]; then
+              TOOLCHAIN_DIR="$(cygpath -w "$HOME/.alya/toolchain/bin")"
+              echo "$TOOLCHAIN_DIR" >> $GITHUB_PATH
             fi
-            echo "$TOOLCHAIN_DIR" >> $GITHUB_PATH
+          else
+            echo "Non-Windows runner detected ($RUNNER_OS): using system compiler ($(which gcc 2>/dev/null || which clang 2>/dev/null))"
           fi
 
       - name: Run cross-language benchmarks
