@@ -95,12 +95,12 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     steps:
       - name: Checkout benchmarks repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Checkout Alya compiler
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: alya-lang/alya
           ref: ${{ inputs.alya_ref || 'develop' }}
