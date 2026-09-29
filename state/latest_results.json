@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-25T21:30:13.022Z",
+  "timestamp": "2026-09-29T16:04:39.276Z",
   "iterations": 10,
   "environment": {
     "os": "Ubuntu 24.04.5 LTS (x64)",
@@ -11,9 +11,9 @@
   },
   "summary": {
     "totalBenchmarks": 14,
-    "geomeanSpeedupVsPython": 14.17,
-    "geomeanSpeedupVsBun": 1.44,
-    "geomeanOverheadVsC": 2.64
+    "geomeanSpeedupVsPython": 12.03,
+    "geomeanSpeedupVsBun": 1.47,
+    "geomeanOverheadVsC": 2.65
   },
   "benchmarks": [
     {
@@ -22,22 +22,22 @@
       "category": "Algorithms",
       "workload": "`fib(30)` (~2.69M calls)",
       "executionTimeMs": {
-        "c": 2.3,
-        "alya": 8.8,
-        "bun": 12.7,
-        "python": 120.7
+        "c": 1.6,
+        "alya": 4.4,
+        "bun": 9.2,
+        "python": 78.2
       },
       "relativeComparison": {
-        "vsC": "3.8x",
-        "vsPython": "13.8x faster",
-        "vsBun": "1.4x faster than Bun",
-        "speedupVsPythonMultiplier": 13.78,
-        "speedupVsBunMultiplier": 1.45,
-        "overheadVsCMultiplier": 3.75,
+        "vsC": "2.7x",
+        "vsPython": "17.8x faster",
+        "vsBun": "2.1x faster than Bun",
+        "speedupVsPythonMultiplier": 17.81,
+        "speedupVsBunMultiplier": 2.09,
+        "overheadVsCMultiplier": 2.72,
         "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56520,
+        "alya": 61720,
         "c": 16000
       }
     },
@@ -47,22 +47,22 @@
       "category": "Algorithms",
       "workload": "50,000 items in-place sort",
       "executionTimeMs": {
-        "c": 14.6,
-        "alya": 130.7,
-        "bun": 32.1,
-        "python": 1807.5
+        "c": 10.2,
+        "alya": 95.8,
+        "bun": 22.8,
+        "python": 991.6
       },
       "relativeComparison": {
-        "vsC": "9.0x",
-        "vsPython": "13.8x faster",
-        "vsBun": "4.1x slower than Bun",
-        "speedupVsPythonMultiplier": 13.83,
-        "speedupVsBunMultiplier": 0.25,
-        "overheadVsCMultiplier": 8.97,
+        "vsC": "9.4x",
+        "vsPython": "10.4x faster",
+        "vsBun": "4.2x slower than Bun",
+        "speedupVsPythonMultiplier": 10.35,
+        "speedupVsBunMultiplier": 0.24,
+        "overheadVsCMultiplier": 9.36,
         "efficiencyTier": "🟡 Near-Native"
       },
       "binarySizeBytes": {
-        "alya": 56560,
+        "alya": 61768,
         "c": 16088
       }
     },
@@ -72,22 +72,22 @@
       "category": "Algorithms",
       "workload": "Primes under 50,000",
       "executionTimeMs": {
-        "c": 1,
-        "alya": 1.8,
-        "bun": 6.6,
-        "python": 16.7
+        "c": 0.7,
+        "alya": 1.2,
+        "bun": 4.9,
+        "python": 11.3
       },
       "relativeComparison": {
-        "vsC": "1.8x",
-        "vsPython": "9.3x faster",
-        "vsBun": "3.7x faster than Bun",
-        "speedupVsPythonMultiplier": 9.32,
-        "speedupVsBunMultiplier": 3.68,
-        "overheadVsCMultiplier": 1.83,
+        "vsC": "1.6x",
+        "vsPython": "9.8x faster",
+        "vsBun": "4.2x faster than Bun",
+        "speedupVsPythonMultiplier": 9.79,
+        "speedupVsBunMultiplier": 4.24,
+        "overheadVsCMultiplier": 1.59,
         "efficiencyTier": "🟢 Near-C"
       },
       "binarySizeBytes": {
-        "alya": 56528,
+        "alya": 61736,
         "c": 16088
       }
     },
@@ -97,22 +97,22 @@
       "category": "Algorithms",
       "workload": "Under 100k (~2.16M steps)",
       "executionTimeMs": {
-        "c": 14.5,
-        "alya": 58.5,
-        "bun": 41.1,
-        "python": 728.1
+        "c": 14.1,
+        "alya": 70.3,
+        "bun": 34.6,
+        "python": 461.1
       },
       "relativeComparison": {
-        "vsC": "4.0x",
-        "vsPython": "12.4x faster",
-        "vsBun": "1.4x slower than Bun",
-        "speedupVsPythonMultiplier": 12.45,
-        "speedupVsBunMultiplier": 0.7,
-        "overheadVsCMultiplier": 4.02,
+        "vsC": "5.0x",
+        "vsPython": "6.6x faster",
+        "vsBun": "2.0x slower than Bun",
+        "speedupVsPythonMultiplier": 6.56,
+        "speedupVsBunMultiplier": 0.49,
+        "overheadVsCMultiplier": 5,
         "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56528,
+        "alya": 61728,
         "c": 16008
       }
     },
@@ -122,22 +122,22 @@
       "category": "Algorithms",
       "workload": "100k items, 50k lookups",
       "executionTimeMs": {
-        "c": 3.6,
-        "alya": 7,
-        "bun": 14.1,
-        "python": 114.9
+        "c": 3.2,
+        "alya": 6.5,
+        "bun": 11.5,
+        "python": 70.5
       },
       "relativeComparison": {
         "vsC": "2.0x",
-        "vsPython": "16.3x faster",
-        "vsBun": "2.0x faster than Bun",
-        "speedupVsPythonMultiplier": 16.3,
-        "speedupVsBunMultiplier": 2,
-        "overheadVsCMultiplier": 1.98,
+        "vsPython": "10.9x faster",
+        "vsBun": "1.8x faster than Bun",
+        "speedupVsPythonMultiplier": 10.88,
+        "speedupVsBunMultiplier": 1.78,
+        "overheadVsCMultiplier": 2.02,
         "efficiencyTier": "🟢 Near-C"
       },
       "binarySizeBytes": {
-        "alya": 56528,
+        "alya": 61736,
         "c": 16096
       }
     },
@@ -147,22 +147,22 @@
       "category": "Collections",
       "workload": "Heap tree allocation & traversal",
       "executionTimeMs": {
-        "c": 125.9,
-        "alya": 399.1,
-        "bun": 96,
-        "python": 2691.4
+        "c": 70.5,
+        "alya": 321.3,
+        "bun": 82.4,
+        "python": 1872.2
       },
       "relativeComparison": {
-        "vsC": "3.2x",
-        "vsPython": "6.7x faster",
-        "vsBun": "4.2x slower than Bun",
-        "speedupVsPythonMultiplier": 6.74,
-        "speedupVsBunMultiplier": 0.24,
-        "overheadVsCMultiplier": 3.17,
+        "vsC": "4.6x",
+        "vsPython": "5.8x faster",
+        "vsBun": "3.9x slower than Bun",
+        "speedupVsPythonMultiplier": 5.83,
+        "speedupVsBunMultiplier": 0.26,
+        "overheadVsCMultiplier": 4.56,
         "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56920,
+        "alya": 62128,
         "c": 20264
       }
     },
@@ -172,22 +172,22 @@
       "category": "Collections",
       "workload": "20k insertions, updates & lookups",
       "executionTimeMs": {
-        "c": 4.3,
-        "alya": 10.5,
-        "bun": 14.2,
-        "python": 23.2
+        "c": 2.9,
+        "alya": 8,
+        "bun": 11.6,
+        "python": 15.2
       },
       "relativeComparison": {
-        "vsC": "2.4x",
-        "vsPython": "2.2x faster",
-        "vsBun": "1.3x faster than Bun",
-        "speedupVsPythonMultiplier": 2.2,
-        "speedupVsBunMultiplier": 1.34,
-        "overheadVsCMultiplier": 2.43,
+        "vsC": "2.7x",
+        "vsPython": "1.9x faster",
+        "vsBun": "1.5x faster than Bun",
+        "speedupVsPythonMultiplier": 1.9,
+        "speedupVsBunMultiplier": 1.46,
+        "overheadVsCMultiplier": 2.74,
         "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56576,
+        "alya": 61784,
         "c": 16280
       }
     },
@@ -197,22 +197,22 @@
       "category": "Numeric",
       "workload": "200×100 grid, 200 iters",
       "executionTimeMs": {
-        "c": 3.1,
-        "alya": 12.8,
-        "bun": 9.3,
-        "python": 121
+        "c": 2.1,
+        "alya": 6.5,
+        "bun": 6.2,
+        "python": 65.3
       },
       "relativeComparison": {
-        "vsC": "4.1x",
-        "vsPython": "9.5x faster",
-        "vsBun": "1.4x slower than Bun",
-        "speedupVsPythonMultiplier": 9.48,
-        "speedupVsBunMultiplier": 0.73,
-        "overheadVsCMultiplier": 4.07,
+        "vsC": "3.1x",
+        "vsPython": "10.0x faster",
+        "vsBun": "1.1x slower than Bun",
+        "speedupVsPythonMultiplier": 10.03,
+        "speedupVsBunMultiplier": 0.95,
+        "overheadVsCMultiplier": 3.13,
         "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56568,
+        "alya": 61776,
         "c": 16048
       }
     },
@@ -222,22 +222,22 @@
       "category": "Numeric",
       "workload": "120×120 dense integer matrix mult",
       "executionTimeMs": {
-        "c": 1.2,
-        "alya": 6.6,
-        "bun": 12,
-        "python": 190.2
+        "c": 0.9,
+        "alya": 4.5,
+        "bun": 8.6,
+        "python": 111.1
       },
       "relativeComparison": {
-        "vsC": "5.3x",
-        "vsPython": "29.0x faster",
-        "vsBun": "1.8x faster than Bun",
-        "speedupVsPythonMultiplier": 29.03,
-        "speedupVsBunMultiplier": 1.83,
-        "overheadVsCMultiplier": 5.27,
-        "efficiencyTier": "🟡 Near-Native"
+        "vsC": "5.0x",
+        "vsPython": "24.6x faster",
+        "vsBun": "1.9x faster than Bun",
+        "speedupVsPythonMultiplier": 24.63,
+        "speedupVsBunMultiplier": 1.9,
+        "overheadVsCMultiplier": 4.96,
+        "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56488,
+        "alya": 61696,
         "c": 16104
       }
     },
@@ -247,22 +247,22 @@
       "category": "Numeric",
       "workload": "500,000 iterations (Pi approx)",
       "executionTimeMs": {
-        "c": 3.8,
-        "alya": 6.7,
-        "bun": 55,
-        "python": 191.7
+        "c": 3,
+        "alya": 7,
+        "bun": 40.5,
+        "python": 116.2
       },
       "relativeComparison": {
-        "vsC": "1.8x",
-        "vsPython": "28.5x faster",
-        "vsBun": "8.2x faster than Bun",
-        "speedupVsPythonMultiplier": 28.49,
-        "speedupVsBunMultiplier": 8.17,
-        "overheadVsCMultiplier": 1.79,
-        "efficiencyTier": "🟢 Near-C"
+        "vsC": "2.3x",
+        "vsPython": "16.6x faster",
+        "vsBun": "5.8x faster than Bun",
+        "speedupVsPythonMultiplier": 16.56,
+        "speedupVsBunMultiplier": 5.77,
+        "overheadVsCMultiplier": 2.32,
+        "efficiencyTier": "🟢 Native Fast"
       },
       "binarySizeBytes": {
-        "alya": 56488,
+        "alya": 61696,
         "c": 15976
       }
     },
@@ -272,22 +272,22 @@
       "category": "Strings",
       "workload": "50,000 hash calculations",
       "executionTimeMs": {
-        "c": 4.7,
-        "alya": 8.8,
-        "bun": 12.5,
-        "python": 430.4
+        "c": 3.1,
+        "alya": 6,
+        "bun": 9.1,
+        "python": 271.1
       },
       "relativeComparison": {
         "vsC": "1.9x",
-        "vsPython": "48.6x faster",
-        "vsBun": "1.4x faster than Bun",
-        "speedupVsPythonMultiplier": 48.63,
-        "speedupVsBunMultiplier": 1.42,
-        "overheadVsCMultiplier": 1.88,
+        "vsPython": "45.2x faster",
+        "vsBun": "1.5x faster than Bun",
+        "speedupVsPythonMultiplier": 45.24,
+        "speedupVsBunMultiplier": 1.51,
+        "overheadVsCMultiplier": 1.9,
         "efficiencyTier": "🟢 Near-C"
       },
       "binarySizeBytes": {
-        "alya": 56552,
+        "alya": 61752,
         "c": 16048
       }
     },
@@ -297,22 +297,22 @@
       "category": "Memory",
       "workload": "50k node alloc & traversal",
       "executionTimeMs": {
-        "c": 2.9,
-        "alya": 2.8,
-        "bun": 7.1,
-        "python": 28.8
+        "c": 2.1,
+        "alya": 2,
+        "bun": 5,
+        "python": 20.5
       },
       "relativeComparison": {
-        "vsC": "1.0x",
-        "vsPython": "10.1x faster",
-        "vsBun": "2.5x faster than Bun",
-        "speedupVsPythonMultiplier": 10.1,
-        "speedupVsBunMultiplier": 2.5,
-        "overheadVsCMultiplier": 0.97,
+        "vsC": "0.9x",
+        "vsPython": "10.4x faster",
+        "vsBun": "2.6x faster than Bun",
+        "speedupVsPythonMultiplier": 10.39,
+        "speedupVsBunMultiplier": 2.55,
+        "overheadVsCMultiplier": 0.92,
         "efficiencyTier": "🟢 Near-C"
       },
       "binarySizeBytes": {
-        "alya": 56784,
+        "alya": 61992,
         "c": 16056
       }
     },
@@ -322,22 +322,22 @@
       "category": "Crypto",
       "workload": "100k bytes KSA & PRGA stream",
       "executionTimeMs": {
-        "c": 1.1,
-        "alya": 2,
-        "bun": 6.7,
-        "python": 34.1
+        "c": 0.9,
+        "alya": 1.9,
+        "bun": 5.4,
+        "python": 24.5
       },
       "relativeComparison": {
-        "vsC": "1.8x",
-        "vsPython": "17.4x faster",
-        "vsBun": "3.4x faster than Bun",
-        "speedupVsPythonMultiplier": 17.35,
-        "speedupVsBunMultiplier": 3.42,
-        "overheadVsCMultiplier": 1.8,
+        "vsC": "2.0x",
+        "vsPython": "13.1x faster",
+        "vsBun": "2.9x faster than Bun",
+        "speedupVsPythonMultiplier": 13.08,
+        "speedupVsBunMultiplier": 2.86,
+        "overheadVsCMultiplier": 1.99,
         "efficiencyTier": "🟢 Near-C"
       },
       "binarySizeBytes": {
-        "alya": 56488,
+        "alya": 61696,
         "c": 16016
       }
     },
@@ -347,22 +347,22 @@
       "category": "Bitwise",
       "workload": "100k integers bit-clearing",
       "executionTimeMs": {
-        "c": 2.3,
-        "alya": 3.8,
-        "bun": 8.2,
-        "python": 139.4
+        "c": 1.7,
+        "alya": 2.3,
+        "bun": 6.7,
+        "python": 86
       },
       "relativeComparison": {
-        "vsC": "1.6x",
-        "vsPython": "37.0x faster",
-        "vsBun": "2.2x faster than Bun",
-        "speedupVsPythonMultiplier": 36.95,
-        "speedupVsBunMultiplier": 2.18,
-        "overheadVsCMultiplier": 1.64,
+        "vsC": "1.4x",
+        "vsPython": "37.1x faster",
+        "vsBun": "2.9x faster than Bun",
+        "speedupVsPythonMultiplier": 37.05,
+        "speedupVsBunMultiplier": 2.87,
+        "overheadVsCMultiplier": 1.35,
         "efficiencyTier": "🟢 Near-C"
       },
       "binarySizeBytes": {
-        "alya": 56488,
+        "alya": 61696,
         "c": 15968
       }
     }
