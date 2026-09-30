@@ -131,7 +131,7 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 ### 10. Monte Carlo Simulation (500,000 iterations)
 * **Measures:** Pseudorandom coordinate generation (LCG), integer / float bounding, loop iteration throughput.
-* **Why Alya is Fast:** 64-bit integer arithmetic compiles down to single-cycle CPU instructions (`imul`, `add`, `idiv`), executing half a million iterations in milliseconds.
+* **Why Alya is Fast:** Integer arithmetic compiles down to single-cycle CPU instructions (`imul`, `add`, `idiv`), executing half a million iterations in milliseconds.
 * **Result:** **1.8x of C (-O2)**, **8.1x faster than Bun**, and **28.5x faster than Python**.
 
 ### 11. FNV-1a String Hashing (50,000 iterations)
