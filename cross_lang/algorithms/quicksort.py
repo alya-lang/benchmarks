@@ -23,7 +23,7 @@ n = 50000
 arr = [0] * n
 seed = 42
 for i in range(n):
-    seed = (seed * 1103515245 + 12345) % 1000000
+    seed = (seed * 2121 + 12347) % 1000000
     if seed < 0:
         seed = -seed
     arr[i] = seed

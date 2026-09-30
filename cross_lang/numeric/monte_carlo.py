@@ -4,12 +4,12 @@ def main():
     n = 500000
 
     for _ in range(n):
-        seed = (seed * 1103515245 + 12345) % 32768
+        seed = (seed * 60001 + 12345) % 32768
         if seed < 0:
             seed = -seed
         x = seed
 
-        seed = (seed * 1103515245 + 12345) % 32768
+        seed = (seed * 60001 + 12345) % 32768
         if seed < 0:
             seed = -seed
         y = seed

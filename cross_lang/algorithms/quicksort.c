@@ -31,7 +31,7 @@ int main(void) {
     int *arr = (int *)malloc(n * sizeof(int));
     long long seed = 42;
     for (int i = 0; i < n; i++) {
-        seed = (seed * 1103515245 + 12345) % 1000000;
+        seed = (seed * 2121 + 12347) % 1000000;
         if (seed < 0) seed = -seed;
         arr[i] = (int)seed;
     }

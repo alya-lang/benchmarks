@@ -27,7 +27,7 @@ const n = 50000;
 const arr = new Int32Array(n);
 let seed = 42;
 for (let i = 0; i < n; i++) {
-    seed = (seed * 1103515245 + 12345) % 1000000;
+    seed = (seed * 2121 + 12347) % 1000000;
     if (seed < 0) seed = -seed;
     arr[i] = seed;
 }
