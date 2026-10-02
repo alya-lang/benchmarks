@@ -86,7 +86,7 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 ### 1. Recursive Fibonacci (`fib(30)`)
 * **Measures:** Function call overhead, standard ABI calling conventions, stack frame push/pop.
-* **Why Alya is Fast:** Alya emits native assembly (ARM64, x64, x86) adhering strictly to platform ABIs with direct branch and link (`bl` / `call`) and return instructions. There are no virtual machine dispatch loops, garbage collection pauses, or interpreter frames.
+* **Why Alya is Fast:** Alya emits native assembly (ARM64, x64) adhering strictly to platform ABIs with direct branch and link (`bl` / `call`) and return instructions. There are no virtual machine dispatch loops, garbage collection pauses, or interpreter frames.
 * **Result:** **3.7x of C (-O2)**, **1.4x faster than Bun**, and **14.0x faster than Python**.
 
 ### 2. In-Place Quicksort (50,000 items)
@@ -121,7 +121,7 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 ### 8. Mandelbrot Fractal (`200x100x200`)
 * **Measures:** Double-precision floating-point arithmetic (`f64`), tight nested loops, register persistence.
-* **Why Alya is Fast:** Alya binds 64-bit float operations directly to hardware floating-point registers (`d0-d2` on ARM64, `xmm0-xmm1` on x64/x86) and fuses loop comparisons directly into single conditional branches.
+* **Why Alya is Fast:** Alya binds 64-bit float operations directly to hardware floating-point registers (`d0-d2` on ARM64, `xmm0-xmm1` on x64) and fuses loop comparisons directly into single conditional branches.
 * **Result:** **4.1x of C (-O2)**, **1.3x slower than Bun**, and **9.5x faster than Python**.
 
 ### 9. Matrix Multiplication (120x120)
@@ -136,7 +136,7 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 ### 11. FNV-1a String Hashing (50,000 iterations)
 * **Measures:** String iteration, character lookup (`char_at`, `ord`), bitwise XOR and integer multiplication.
-* **Why Alya is Fast:** Direct string index intrinsics bypass runtime function call overhead; bitwise masking is optimized natively (`ubfx` on ARM64, direct immediate bitwise ops on x64/x86); and loop conditions use zero-overhead branch fusion.
+* **Why Alya is Fast:** Direct string index intrinsics bypass runtime function call overhead; bitwise masking is optimized natively (`ubfx` on ARM64, direct immediate bitwise ops on x64); and loop conditions use zero-overhead branch fusion.
 * **Result:** **1.9x of C (-O2)**, **1.4x faster than Bun**, and **48.8x faster than Python**.
 
 ### 12. Linked List Allocation (50,000 nodes)

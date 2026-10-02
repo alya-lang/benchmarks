@@ -15,7 +15,6 @@ on:
           - 'windows-11-arm'
           - 'macos-latest'
           - 'macos-15-intel'
-          - 'linux-x86'
           - 'all'
       category:
         description: 'Benchmark Category'
@@ -84,11 +83,9 @@ jobs:
           entry() {
             printf '{"os":"%s","label":"%s","target":"%s"}' "$1" "$2" "$3"
           }
-          ALL="$(entry ubuntu-latest 'Linux x64' ''),$(entry ubuntu-latest 'Linux x86' 'i686-unknown-linux-gnu'),$(entry ubuntu-24.04-arm 'Linux ARM64' ''),$(entry windows-latest 'Windows x64' ''),$(entry windows-11-arm 'Windows ARM64' ''),$(entry macos-latest 'macOS ARM64' ''),$(entry macos-15-intel 'macOS Intel' '')"
+          ALL="$(entry ubuntu-latest 'Linux x64' ''),$(entry ubuntu-24.04-arm 'Linux ARM64' ''),$(entry windows-latest 'Windows x64' ''),$(entry windows-11-arm 'Windows ARM64' ''),$(entry macos-latest 'macOS ARM64' ''),$(entry macos-15-intel 'macOS Intel' '')"
           if [ "$TARGET_OS" = "all" ]; then
             echo "matrix={\"include\":[$ALL]}" >> "$GITHUB_OUTPUT"
-          elif [ "$TARGET_OS" = "linux-x86" ]; then
-            echo "matrix={\"include\":[$(entry ubuntu-latest 'Linux x86' 'i686-unknown-linux-gnu')]}" >> "$GITHUB_OUTPUT"
           else
             echo "matrix={\"include\":[$(entry "$TARGET_OS" "$TARGET_OS" '')]}" >> "$GITHUB_OUTPUT"
           fi
@@ -115,13 +112,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Install 32-bit C toolchain (Linux x86 leg)
-        if: matrix.target == 'i686-unknown-linux-gnu'
-        shell: bash
-        run: sudo apt-get update && sudo apt-get install -y gcc-multilib libc6-i386
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
@@ -140,15 +130,8 @@ jobs:
         shell: bash
         run: |
           cd alya-compiler
-          TARGET_ARGS=""
-          TARGET_SUBDIR="release"
-          if [ -n "${{ matrix.target }}" ]; then
-            TARGET_ARGS="--target ${{ matrix.target }}"
-            TARGET_SUBDIR="${{ matrix.target }}/release"
-          fi
-          # shellcheck disable=SC2086
-          cargo build --release $TARGET_ARGS
-          TARGET_DIR="$(pwd)/target/$TARGET_SUBDIR"
+          cargo build --release
+          TARGET_DIR="$(pwd)/target/release"
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             TARGET_DIR="$(cygpath -w "$TARGET_DIR")"
             echo "ALYA_COMPILER=$TARGET_DIR\\alya.exe" >> $GITHUB_ENV
