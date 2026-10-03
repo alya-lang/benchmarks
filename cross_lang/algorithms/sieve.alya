@@ -2,16 +2,16 @@ function count_primes(limit: int) -> int
     let flags: int[] = []
     let i: int = 0
     while i <= limit
-        flags.push(1)
+        flags.push(true)
         i += 1
     end
 
     let p: int = 2
     while p * p <= limit
-        if flags[p] == 1
+        if flags[p] == true
             let multiple: int = p * p
             while multiple <= limit
-                flags[multiple] = 0
+                flags[multiple] = false
                 multiple += p
             end
         end
@@ -21,7 +21,7 @@ function count_primes(limit: int) -> int
     let count: int = 0
     let j: int = 2
     while j <= limit
-        if flags[j] == 1
+        if flags[j] == true
             count += 1
         end
         j += 1
