@@ -924,43 +924,73 @@ function updateBenchReadme(
         ? `**${g.toFixed(1)}x faster than ${name}**`
         : `\`${(1 / g).toFixed(1)}x slower than ${name}\``;
 
-  // 2. Performance Scorecard & Clean Divided Tables
+  // 2. Performance Scorecard & Clean Divided Tables.
+  // Layout (wide tables are split in two: the classic C/Bun/Python
+  // view plus a Systems-Peers view, so no table exceeds five data
+  // columns). The section regex below covers everything up to the
+  // `## 🔬 Benchmark Details` marker, so every table here regenerates.
   const scorecardBlock = `### 🏆 Overall Performance Scorecard (Geomean Summary)
 
-| Metric | Alya (Native) | C (GCC -O2) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Metric | Alya (Native) | C (GCC -O2) | Bun (JS JIT) | Python 3.12 |
+| :--- | :---: | :---: | :---: | :---: |
 | **Geometric Mean Relative Speed** | **1.0x (Baseline)** | \`${(
     1 / geomeanVsC
   ).toFixed(2)}x\` *(faster)* | \`${(1 / geomeanVsBun).toFixed(2)}x\` | \`${(
     1 / geomeanVsPy
-  ).toFixed(2)}x\` *(slower)* | ${fmtSpeed(hasGo, geomeanVsGo)} | ${fmtSpeed(
-    hasZig,
-    geomeanVsZig
-  )} | ${fmtSpeed(hasNim, geomeanVsNim)} |
+  ).toFixed(2)}x\` *(slower)* |
 | **Alya Relative Performance** | **Reference Target** | **~${geomeanVsC.toFixed(
     1
   )}x of C** | **${geomeanVsBun.toFixed(1)}x faster** | **${geomeanVsPy.toFixed(
     1
-  )}x faster** | ${fmtVs(hasGo, geomeanVsGo, "Go")} | ${fmtVs(
+  )}x faster** |
+| **Runtime Architecture** | **Native AOT Binary** | Native AOT Binary | JIT + Runtime VM | Bytecode + Interpreter |
+| **Distribution / Executable Size** | **~90 KB – 350 KB** | ~50 KB – 100 KB | ~90 MB (runtime) | ~50 MB (runtime) |
+| **Cold-Start Startup Latency** | **< 2 ms** | < 1 ms | ~20 - 35 ms | ~30 - 55 ms |
+| **Peak Memory Footprint (RSS)** | **~3 - 8 MB** | ~2 - 5 MB | ~30 - 60 MB | ~20 - 45 MB |
+
+---
+
+### 🏆 Peer Scorecard: Go / Zig / Nim (Geomean Summary)
+
+| Metric | Go | Zig | Nim |
+| :--- | :---: | :---: | :---: |
+| **Geometric Mean Relative Speed** | ${fmtSpeed(hasGo, geomeanVsGo)} | ${fmtSpeed(
+    hasZig,
+    geomeanVsZig
+  )} | ${fmtSpeed(hasNim, geomeanVsNim)} |
+| **Alya Relative Performance** | ${fmtVs(hasGo, geomeanVsGo, "Go")} | ${fmtVs(
     hasZig,
     geomeanVsZig,
     "Zig"
   )} | ${fmtVs(hasNim, geomeanVsNim, "Nim")} |
-| **Runtime Architecture** | **Native AOT Binary** | Native AOT Binary | JIT + Runtime VM | Bytecode + Interpreter | Native AOT Binary | Native AOT Binary | Native AOT (C backend) |
-| **Distribution / Executable Size** | **~90 KB – 350 KB** | ~50 KB – 100 KB | ~90 MB (runtime) | ~50 MB (runtime) | ~2 MB (static) | ~100 KB – 500 KB | ~100 KB – 500 KB |
-| **Cold-Start Startup Latency** | **< 2 ms** | < 1 ms | ~20 - 35 ms | ~30 - 55 ms | < 5 ms | < 2 ms | < 5 ms |
-| **Peak Memory Footprint (RSS)** | **~3 - 8 MB** | ~2 - 5 MB | ~30 - 60 MB | ~20 - 45 MB | ~5 - 15 MB | ~3 - 8 MB | ~5 - 15 MB |
+| **Runtime Architecture** | Native AOT Binary | Native AOT Binary | Native AOT (C backend) |
+| **Distribution / Executable Size** | ~2 MB (static) | ~100 KB – 500 KB | ~100 KB – 500 KB |
+| **Cold-Start Startup Latency** | < 5 ms | < 2 ms | < 5 ms |
+| **Peak Memory Footprint (RSS)** | ~5 - 15 MB | ~3 - 8 MB | ~5 - 15 MB |
 
 ---
 
 ### ⏱️ Execution Time Benchmark (Median of ${iters} runs, lower is better)
 
-| Category | Benchmark | Target Workload | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Category | Benchmark | Target Workload | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
 ${results
   .map(
     (r) =>
-      `| \`${r.category}\` | ${r.displayName} | ${r.workload} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` | ${r.goCell} | ${r.zigCell} | ${r.nimCell} |`
+      `| \`${r.category}\` | ${r.displayName} | ${r.workload} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` |`
+  )
+  .join("\n")}
+
+---
+
+### ⏱️ Execution Time: Systems Peers (Median of ${iters} runs, lower is better)
+
+| Category | Benchmark | Target Workload | Alya (Native) | Go | Zig | Nim |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+${results
+  .map(
+    (r) =>
+      `| \`${r.category}\` | ${r.displayName} | ${r.workload} | **\`${r.alyaMs} ms\`** | ${r.goCell} | ${r.zigCell} | ${r.nimCell} |`
   )
   .join("\n")}
 
@@ -968,12 +998,25 @@ ${results
 
 ### 🚀 Relative Speedup & Comparative Multipliers
 
-| Benchmark | vs Python 3.12 | vs Bun (JS JIT) | vs C (GCC -O2) | vs Go | vs Zig | vs Nim | Efficiency Class |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Benchmark | vs Python 3.12 | vs Bun (JS JIT) | vs C (GCC -O2) | Efficiency Class |
+| :--- | :---: | :---: | :---: | :---: |
 ${results
   .map(
     (r) =>
-      `| ${r.displayName} | **${r.vsPy}** | ${r.vsBunMarkdown} | **${r.vsC}** | ${r.vsGoMarkdown} | ${r.vsZigMarkdown} | ${r.vsNimMarkdown} | ${r.efficiencyTier} |`
+      `| ${r.displayName} | **${r.vsPy}** | ${r.vsBunMarkdown} | **${r.vsC}** | ${r.efficiencyTier} |`
+  )
+  .join("\n")}
+
+---
+
+### 🚀 Relative Speedup: Systems Peers
+
+| Benchmark | vs Go | vs Zig | vs Nim | Efficiency Class |
+| :--- | :---: | :---: | :---: | :---: |
+${results
+  .map(
+    (r) =>
+      `| ${r.displayName} | ${r.vsGoMarkdown} | ${r.vsZigMarkdown} | ${r.vsNimMarkdown} | ${r.efficiencyTier} |`
   )
   .join("\n")}
 
@@ -1122,12 +1165,20 @@ function updateMainRepoReadme(
   let content = fs.readFileSync(rootReadmePath, "utf-8");
 
   const header =
-    "| Category | Benchmark | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim | Alya vs Bun | Alya vs Python |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |";
+    "| Category | Benchmark | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Alya vs Bun | Alya vs Python |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |";
   const rows = results.map(
     (r) =>
-      `| \`${r.category}\` | ${r.rootDisplayName} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` | ${r.goCell} | ${r.zigCell} | ${r.nimCell} | ${r.vsBunMarkdown} | **${r.vsPy}** |`
+      `| \`${r.category}\` | ${r.rootDisplayName} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` | ${r.vsBunMarkdown} | **${r.vsPy}** |`
+  );
+  const peerHeader =
+    "| Category | Benchmark | Alya (Native) | Go | Zig | Nim | Alya vs Go | Alya vs Zig | Alya vs Nim |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |";
+  const peerRows = results.map(
+    (r) =>
+      `| \`${r.category}\` | ${r.rootDisplayName} | **\`${r.alyaMs} ms\`** | ${r.goCell} | ${r.zigCell} | ${r.nimCell} | ${r.vsGoMarkdown} | ${r.vsZigMarkdown} | ${r.vsNimMarkdown} |`
   );
   const newSection = `### Cross-Language Execution Benchmark (Median of ${iters} runs)\n\n${header}\n${rows.join(
+    "\n"
+  )}\n\n### Cross-Language Execution: Systems Peers (Median of ${iters} runs)\n\n${peerHeader}\n${peerRows.join(
     "\n"
   )}`;
 
@@ -1674,10 +1725,10 @@ async function main() {
     "========================================================================================================="
   );
   console.log(
-    "| Category     | Benchmark                         | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim |"
+    "| Category     | Benchmark                         | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 |"
   );
   console.log(
-    "|:-------------|:----------------------------------|------------:|--------------:|-------------:|------------:|---:|---:|---:|"
+    "|:-------------|:----------------------------------|------------:|--------------:|-------------:|------------:|"
   );
 
   for (const r of benchResults) {
@@ -1686,9 +1737,24 @@ async function main() {
         33
       )} | ${`${r.cMs} ms`.padStart(11)} | ${`${r.alyaMs} ms`.padStart(
         13
-      )} | ${`${r.bunMs} ms`.padStart(12)} | ${`${r.pyMs} ms`.padStart(
-        11
-      )} | ${r.goMs.padStart(7)} | ${r.zigMs.padStart(7)} | ${r.nimMs.padStart(7)} |`
+      )} | ${`${r.bunMs} ms`.padStart(12)} | ${`${r.pyMs} ms`.padStart(11)} |`
+    );
+  }
+
+  console.log(
+    "| Category     | Benchmark                         | Alya (Native) | Go      | Zig     | Nim     |"
+  );
+  console.log(
+    "|:-------------|:----------------------------------|--------------:|--------:|--------:|--------:|"
+  );
+
+  for (const r of benchResults) {
+    console.log(
+      `| ${r.category.padEnd(12)} | ${r.name.padEnd(
+        33
+      )} | ${`${r.alyaMs} ms`.padStart(13)} | ${r.goMs.padStart(7)} | ${r.zigMs.padStart(
+        7
+      )} | ${r.nimMs.padStart(7)} |`
     );
   }
 
@@ -1702,18 +1768,29 @@ async function main() {
     "========================================================================================================="
   );
   console.log(
-    "| Benchmark                         | vs Python (Speedup) | vs Bun (Speedup)    | vs C (Overhead) | vs Go | vs Zig | vs Nim | Tier         |"
+    "| Benchmark                         | vs Python (Speedup) | vs Bun (Speedup)    | vs C (Overhead) | Tier         |"
   );
   console.log(
-    "|:----------------------------------|--------------------:|--------------------:|----------------:|------:|------:|------:|:-------------|"
+    "|:----------------------------------|--------------------:|--------------------:|----------------:|:-------------|"
   );
   for (const r of benchResults) {
     console.log(
       `| ${r.name.padEnd(33)} | ${r.vsPy.padStart(19)} | ${r.bunText.padStart(
         19
-      )} | ${r.vsC.padStart(15)} | ${r.goText.padStart(9)} | ${r.zigText.padStart(
+      )} | ${r.vsC.padStart(15)} | ${r.efficiencyTier.padEnd(12)} |`
+    );
+  }
+  console.log(
+    "| Benchmark                         | vs Go     | vs Zig    | vs Nim    |"
+  );
+  console.log(
+    "|:----------------------------------|----------:|----------:|----------:|"
+  );
+  for (const r of benchResults) {
+    console.log(
+      `| ${r.name.padEnd(33)} | ${r.goText.padStart(9)} | ${r.zigText.padStart(
         9
-      )} | ${r.nimText.padStart(9)} | ${r.efficiencyTier.padEnd(12)} |`
+      )} | ${r.nimText.padStart(9)} |`
     );
   }
 
