@@ -126,6 +126,32 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: master
+
+      - name: Setup Nim
+        shell: bash
+        run: |
+          if command -v nim >/dev/null 2>&1; then
+            echo "Nim already installed: $(nim --version | head -1)"
+          elif [ "$RUNNER_OS" = "Windows" ] && [ "$RUNNER_ARCH" = "ARM64" ]; then
+            echo '::warning::No official Nim build for Windows ARM64; Nim columns will render n/a.'
+          else
+            curl -sSf https://nim-lang.org/choosenim/init.sh -o /tmp/choosenim.sh
+            sh /tmp/choosenim.sh -y || echo '::warning::choosenim failed; Nim columns will render n/a.'
+            echo "$HOME/.nimble/bin" >> $GITHUB_PATH
+          fi
+          export PATH="$HOME/.nimble/bin:$PATH"
+          command -v nim >/dev/null 2>&1 && nim --version | head -1 || echo '::warning::Nim unavailable; Nim columns will render n/a.'
+
       - name: Build Alya compiler (Release)
         shell: bash
         run: |
@@ -164,13 +190,19 @@ jobs:
           fi
           bun run cross_lang/runner.ts $ARGS
 
+      - name: Regression check vs history (advisory)
+        if: inputs.category == 'all' || inputs.category == ''
+        continue-on-error: true
+        shell: bash
+        run: bun run cross_lang/runner.ts --suite ${{ inputs.mode || 'comprehensive' }} --category ${{ inputs.category || 'all' }} --check --threshold 25
+
       - name: Commit and push benchmark results
         if: inputs.update_readme == true && (inputs.category == 'all' || inputs.category == '') && (matrix.label == 'Linux x64' || inputs.os != 'all')
         shell: bash
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md state/latest_results.json
+          git add README.md state/latest_results.json state/history.jsonl
           if git diff --staged --quiet; then
             echo "No changes in benchmark results."
           else

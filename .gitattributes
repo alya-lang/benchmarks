@@ -7,6 +7,9 @@
 # so compilers, assemblers, shells and golden-file comparisons see stable bytes.
 *.alya text eol=lf
 *.c text eol=lf
+*.go text eol=lf
+*.zig text eol=lf
+*.nim text eol=lf
 *.h text eol=lf
 *.s text eol=lf
 *.rs text eol=lf

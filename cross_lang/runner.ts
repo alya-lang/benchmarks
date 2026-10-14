@@ -23,6 +23,12 @@ interface BenchConfig {
   cSrc: string;
   pySrc: string;
   jsSrc: string;
+  // Optional Go/Zig/Nim counterparts. When absent, the runner derives
+  // them from the jsSrc stem (`<name>.js` -> `<name>.go`, ...); a
+  // missing file renders as "n/a" instead of failing the suite.
+  goSrc?: string;
+  zigSrc?: string;
+  nimSrc?: string;
 }
 
 const BENCHMARKS: BenchConfig[] = [
@@ -433,6 +439,35 @@ function getPythonCmd(): string {
   return "python";
 }
 
+// Extra-language toolchains (Go/Zig/Nim counterparts). Returns the
+// binary name when it runs, else null: the benchmark then renders
+// "n/a" for that language instead of failing the suite (local runs
+// may lack a toolchain; CI installs all three).
+function getLangCmd(cmd: string, versionArgs: string[] = ["version"]): string | null {
+  try {
+    const r = spawnSync(cmd, versionArgs, { encoding: "utf-8" });
+    if (r.status === 0) return cmd;
+  } catch {}
+  return null;
+}
+
+function getLangVersion(
+  cmd: string | null,
+  versionArgs: string[],
+  fallback: string
+): string {
+  if (!cmd) return "not installed";
+  try {
+    const res = spawnSync(cmd, versionArgs, { encoding: "utf-8" });
+    const ver = ((res.stdout || "") + " " + (res.stderr || ""))
+      .trim()
+      .split("\n")[0]
+      .trim();
+    if (ver) return ver;
+  } catch {}
+  return fallback;
+}
+
 function runCommand(
   cmd: string,
   args: string[]
@@ -513,6 +548,9 @@ function getTestEnvironment(
   bun: string;
   python: string;
   alya: string;
+  go: string;
+  zig: string;
+  nim: string;
   methodology: string;
 } {
   let osName = `Windows 11 Pro (${process.arch})`;
@@ -576,6 +614,9 @@ function getTestEnvironment(
     bun: bunVer,
     python: pyVer,
     alya: alyaVer,
+    go: getLangVersion(getLangCmd("go"), ["version"], "Go"),
+    zig: getLangVersion(getLangCmd("zig"), ["version"], "Zig"),
+    nim: getLangVersion(getLangCmd("nim"), ["--version"], "Nim"),
     methodology,
   };
 }
@@ -668,21 +709,60 @@ interface DetailedBenchResult {
   alyaMedian: number;
   bunMedian: number;
   pyMedian: number;
+  goMedian: number | null;
+  zigMedian: number | null;
+  nimMedian: number | null;
   cMs: string;
   alyaMs: string;
   bunMs: string;
   pyMs: string;
+  goMs: string;
+  zigMs: string;
+  nimMs: string;
+  goCell: string;
+  zigCell: string;
+  nimCell: string;
   vsC: string;
   vsPy: string;
   vsBunMarkdown: string;
+  vsGoMarkdown: string;
+  vsZigMarkdown: string;
+  vsNimMarkdown: string;
   bunText: string;
   pyText: string;
+  goText: string;
+  zigText: string;
+  nimText: string;
   alyaBinaryBytes?: number;
   cBinaryBytes?: number;
+  goBinaryBytes?: number;
+  zigBinaryBytes?: number;
+  nimBinaryBytes?: number;
   speedupVsPy: number;
   speedupVsBun: number;
+  speedupVsGo: number | null;
+  speedupVsZig: number | null;
+  speedupVsNim: number | null;
   overheadVsC: number;
   efficiencyTier: string;
+}
+
+// History entries for `bench:check`: same-OS Alya medians, newest last.
+function readHistoryAlyaMs(os: string, limit = 5): Array<Record<string, number>> {
+  const histPath = path.resolve(__dirname, "../state/history.jsonl");
+  if (!fs.existsSync(histPath)) return [];
+  const rows: Array<Record<string, number>> = [];
+  for (const line of fs.readFileSync(histPath, "utf-8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const entry = JSON.parse(trimmed);
+      if (entry && entry.os === os && entry.alyaMs && typeof entry.alyaMs === "object") {
+        rows.push(entry.alyaMs as Record<string, number>);
+      }
+    } catch {}
+  }
+  return rows.slice(-limit);
 }
 
 function findReadmePath(): string | null {
@@ -710,6 +790,15 @@ function saveResultsJson(
   const geomeanVsPy = computeGeomean(results.map((r) => r.speedupVsPy));
   const geomeanVsBun = computeGeomean(results.map((r) => r.speedupVsBun));
   const geomeanVsC = computeGeomean(results.map((r) => r.overheadVsC));
+  const geomeanVsGo = computeGeomean(
+    results.map((r) => r.speedupVsGo ?? NaN)
+  );
+  const geomeanVsZig = computeGeomean(
+    results.map((r) => r.speedupVsZig ?? NaN)
+  );
+  const geomeanVsNim = computeGeomean(
+    results.map((r) => r.speedupVsNim ?? NaN)
+  );
 
   const payload = {
     timestamp: new Date().toISOString(),
@@ -720,6 +809,9 @@ function saveResultsJson(
       geomeanSpeedupVsPython: parseFloat(geomeanVsPy.toFixed(2)),
       geomeanSpeedupVsBun: parseFloat(geomeanVsBun.toFixed(2)),
       geomeanOverheadVsC: parseFloat(geomeanVsC.toFixed(2)),
+      geomeanSpeedupVsGo: parseFloat(geomeanVsGo.toFixed(2)),
+      geomeanSpeedupVsZig: parseFloat(geomeanVsZig.toFixed(2)),
+      geomeanSpeedupVsNim: parseFloat(geomeanVsNim.toFixed(2)),
     },
     benchmarks: results.map((r) => ({
       id: r.id,
@@ -731,19 +823,34 @@ function saveResultsJson(
         alya: parseFloat(r.alyaMs),
         bun: parseFloat(r.bunMs),
         python: parseFloat(r.pyMs),
+        go: r.goMedian !== null ? parseFloat(r.goMs) : null,
+        zig: r.zigMedian !== null ? parseFloat(r.zigMs) : null,
+        nim: r.nimMedian !== null ? parseFloat(r.nimMs) : null,
       },
       relativeComparison: {
         vsC: r.vsC,
         vsPython: r.vsPy,
         vsBun: r.bunText,
+        vsGo: r.goText,
+        vsZig: r.zigText,
+        vsNim: r.nimText,
         speedupVsPythonMultiplier: parseFloat(r.speedupVsPy.toFixed(2)),
         speedupVsBunMultiplier: parseFloat(r.speedupVsBun.toFixed(2)),
+        speedupVsGoMultiplier:
+          r.speedupVsGo !== null ? parseFloat(r.speedupVsGo.toFixed(2)) : null,
+        speedupVsZigMultiplier:
+          r.speedupVsZig !== null ? parseFloat(r.speedupVsZig.toFixed(2)) : null,
+        speedupVsNimMultiplier:
+          r.speedupVsNim !== null ? parseFloat(r.speedupVsNim.toFixed(2)) : null,
         overheadVsCMultiplier: parseFloat(r.overheadVsC.toFixed(2)),
         efficiencyTier: r.efficiencyTier,
       },
       binarySizeBytes: {
         alya: r.alyaBinaryBytes ?? null,
         c: r.cBinaryBytes ?? null,
+        go: r.goBinaryBytes ?? null,
+        zig: r.zigBinaryBytes ?? null,
+        nim: r.nimBinaryBytes ?? null,
       },
     })),
   };
@@ -751,6 +858,27 @@ function saveResultsJson(
   const targetFile = path.join(stateDir, "latest_results.json");
   fs.writeFileSync(targetFile, JSON.stringify(payload, null, 2), "utf-8");
   console.log(`[INFO] Saved benchmark results JSON to ${targetFile}`);
+
+  // Rolling history for regression checks (`bench:check`): one line
+  // per run with per-workload Alya medians. Never edited by hand.
+  try {
+    const historyLine = JSON.stringify({
+      timestamp: payload.timestamp,
+      os: env.os,
+      alya: env.alya,
+      iterations: iters,
+      alyaMs: Object.fromEntries(
+        results.map((r) => [r.id, parseFloat(r.alyaMs)])
+      ),
+    });
+    fs.appendFileSync(
+      path.join(stateDir, "history.jsonl"),
+      historyLine + "\n",
+      "utf-8"
+    );
+  } catch (err) {
+    console.warn(`[WARNING] Could not append benchmark history: ${err}`);
+  }
 }
 
 function updateBenchReadme(
@@ -769,7 +897,7 @@ function updateBenchReadme(
 
   // 1. Update Test Environment
   const env = getTestEnvironment(alyaCompiler, pyCmd, iters);
-  const envBlock = `### Test Environment\n* **Operating System:** ${env.os}\n* **C Compiler:** ${env.gcc}\n* **JavaScript Engine:** ${env.bun}\n* **Python Runtime:** ${env.python}\n* **Alya Version:** ${env.alya} (Compiled with \`alya build\` in Release mode)\n* **Measurement Methodology:** ${env.methodology}`;
+  const envBlock = `### Test Environment\n* **Operating System:** ${env.os}\n* **C Compiler:** ${env.gcc}\n* **JavaScript Engine:** ${env.bun}\n* **Python Runtime:** ${env.python}\n* **Go Toolchain:** ${env.go}\n* **Zig Toolchain:** ${env.zig}\n* **Nim Toolchain:** ${env.nim}\n* **Alya Version:** ${env.alya} (Compiled with \`alya build\` in Release mode)\n* **Measurement Methodology:** ${env.methodology}\n* **Reading This Page:** every implementation solves the same problem on identical inputs and its output is verified before timing. Losing rows are never removed: a slower cell is a finding, not an embarrassment. C is compiled \`-O2\`, Go/Zig/Nim at release settings, Bun/Python run as-is.`;
   content = content.replace(
     /### Test Environment[\s\S]*?(?=\r?\n\r?\n---)/,
     envBlock
@@ -779,37 +907,60 @@ function updateBenchReadme(
   const geomeanVsPy = computeGeomean(results.map((r) => r.speedupVsPy));
   const geomeanVsBun = computeGeomean(results.map((r) => r.speedupVsBun));
   const geomeanVsC = computeGeomean(results.map((r) => r.overheadVsC));
+  const geomeanVsGo = computeGeomean(results.map((r) => r.speedupVsGo ?? NaN));
+  const geomeanVsZig = computeGeomean(results.map((r) => r.speedupVsZig ?? NaN));
+  const geomeanVsNim = computeGeomean(results.map((r) => r.speedupVsNim ?? NaN));
+  const hasGo = results.some((r) => r.speedupVsGo !== null);
+  const hasZig = results.some((r) => r.speedupVsZig !== null);
+  const hasNim = results.some((r) => r.speedupVsNim !== null);
+  // Direction-aware cells: no data -> "n/a" (never a fake number);
+  // otherwise faster/slower follows the measured direction.
+  const fmtSpeed = (has: boolean, g: number) =>
+    !has ? "n/a" : `\`${(1 / g).toFixed(2)}x\`${g < 1 ? " *(faster)*" : " *(slower)*"}`;
+  const fmtVs = (has: boolean, g: number, name: string) =>
+    !has
+      ? "n/a"
+      : g >= 1
+        ? `**${g.toFixed(1)}x faster than ${name}**`
+        : `\`${(1 / g).toFixed(1)}x slower than ${name}\``;
 
   // 2. Performance Scorecard & Clean Divided Tables
   const scorecardBlock = `### 🏆 Overall Performance Scorecard (Geomean Summary)
 
-| Metric | Alya (Native) | C (GCC -O2) | Bun (JS JIT) | Python 3.12 |
-| :--- | :---: | :---: | :---: | :---: |
+| Metric | Alya (Native) | C (GCC -O2) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Geometric Mean Relative Speed** | **1.0x (Baseline)** | \`${(
     1 / geomeanVsC
   ).toFixed(2)}x\` *(faster)* | \`${(1 / geomeanVsBun).toFixed(2)}x\` | \`${(
     1 / geomeanVsPy
-  ).toFixed(2)}x\` *(slower)* |
+  ).toFixed(2)}x\` *(slower)* | ${fmtSpeed(hasGo, geomeanVsGo)} | ${fmtSpeed(
+    hasZig,
+    geomeanVsZig
+  )} | ${fmtSpeed(hasNim, geomeanVsNim)} |
 | **Alya Relative Performance** | **Reference Target** | **~${geomeanVsC.toFixed(
     1
   )}x of C** | **${geomeanVsBun.toFixed(1)}x faster** | **${geomeanVsPy.toFixed(
     1
-  )}x faster** |
-| **Runtime Architecture** | **Native AOT Binary** | Native AOT Binary | JIT + Runtime VM | Bytecode + Interpreter |
-| **Distribution / Executable Size** | **~90 KB – 350 KB** | ~50 KB – 100 KB | ~90 MB (runtime) | ~50 MB (runtime) |
-| **Cold-Start Startup Latency** | **< 2 ms** | < 1 ms | ~20 - 35 ms | ~30 - 55 ms |
-| **Peak Memory Footprint (RSS)** | **~3 - 8 MB** | ~2 - 5 MB | ~30 - 60 MB | ~20 - 45 MB |
+  )}x faster** | ${fmtVs(hasGo, geomeanVsGo, "Go")} | ${fmtVs(
+    hasZig,
+    geomeanVsZig,
+    "Zig"
+  )} | ${fmtVs(hasNim, geomeanVsNim, "Nim")} |
+| **Runtime Architecture** | **Native AOT Binary** | Native AOT Binary | JIT + Runtime VM | Bytecode + Interpreter | Native AOT Binary | Native AOT Binary | Native AOT (C backend) |
+| **Distribution / Executable Size** | **~90 KB – 350 KB** | ~50 KB – 100 KB | ~90 MB (runtime) | ~50 MB (runtime) | ~2 MB (static) | ~100 KB – 500 KB | ~100 KB – 500 KB |
+| **Cold-Start Startup Latency** | **< 2 ms** | < 1 ms | ~20 - 35 ms | ~30 - 55 ms | < 5 ms | < 2 ms | < 5 ms |
+| **Peak Memory Footprint (RSS)** | **~3 - 8 MB** | ~2 - 5 MB | ~30 - 60 MB | ~20 - 45 MB | ~5 - 15 MB | ~3 - 8 MB | ~5 - 15 MB |
 
 ---
 
 ### ⏱️ Execution Time Benchmark (Median of ${iters} runs, lower is better)
 
-| Category | Benchmark | Target Workload | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+| Category | Benchmark | Target Workload | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 ${results
   .map(
     (r) =>
-      `| \`${r.category}\` | ${r.displayName} | ${r.workload} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` |`
+      `| \`${r.category}\` | ${r.displayName} | ${r.workload} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` | ${r.goCell} | ${r.zigCell} | ${r.nimCell} |`
   )
   .join("\n")}
 
@@ -817,12 +968,12 @@ ${results
 
 ### 🚀 Relative Speedup & Comparative Multipliers
 
-| Benchmark | vs Python 3.12 | vs Bun (JS JIT) | vs C (GCC -O2) | Efficiency Class |
-| :--- | :---: | :---: | :---: | :---: |
+| Benchmark | vs Python 3.12 | vs Bun (JS JIT) | vs C (GCC -O2) | vs Go | vs Zig | vs Nim | Efficiency Class |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 ${results
   .map(
     (r) =>
-      `| ${r.displayName} | **${r.vsPy}** | ${r.vsBunMarkdown} | **${r.vsC}** | ${r.efficiencyTier} |`
+      `| ${r.displayName} | **${r.vsPy}** | ${r.vsBunMarkdown} | **${r.vsC}** | ${r.vsGoMarkdown} | ${r.vsZigMarkdown} | ${r.vsNimMarkdown} | ${r.efficiencyTier} |`
   )
   .join("\n")}
 
@@ -921,9 +1072,16 @@ ${results
   for (const rep of detailReplacements) {
     const item = results.find((d) => d.id === rep.id);
     if (item && rep.regex.test(content)) {
+      // Extra languages only when measured; "n/a" never lands in prose.
+      const extras = [
+        item.goText !== "n/a" ? `**${item.goText} vs Go**` : "",
+        item.zigText !== "n/a" ? `**${item.zigText} vs Zig**` : "",
+        item.nimText !== "n/a" ? `**${item.nimText} vs Nim**` : "",
+      ].filter(Boolean);
+      const tail = extras.length > 0 ? `, ${extras.join(", ")}` : "";
       content = content.replace(
         rep.regex,
-        `$1 **${item.vsC} of C (-O2)**, **${item.bunText}**, and **${item.pyText}**.`
+        `$1 **${item.vsC} of C (-O2)**, **${item.bunText}**, and **${item.pyText}**${tail}.`
       );
     }
   }
@@ -964,10 +1122,10 @@ function updateMainRepoReadme(
   let content = fs.readFileSync(rootReadmePath, "utf-8");
 
   const header =
-    "| Category | Benchmark | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Alya vs Bun | Alya vs Python |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |";
+    "| Category | Benchmark | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim | Alya vs Bun | Alya vs Python |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |";
   const rows = results.map(
     (r) =>
-      `| \`${r.category}\` | ${r.rootDisplayName} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` | ${r.vsBunMarkdown} | **${r.vsPy}** |`
+      `| \`${r.category}\` | ${r.rootDisplayName} | \`${r.cMs} ms\` | **\`${r.alyaMs} ms\`** | \`${r.bunMs} ms\` | \`${r.pyMs} ms\` | ${r.goCell} | ${r.zigCell} | ${r.nimCell} | ${r.vsBunMarkdown} | **${r.vsPy}** |`
   );
   const newSection = `### Cross-Language Execution Benchmark (Median of ${iters} runs)\n\n${header}\n${rows.join(
     "\n"
@@ -984,9 +1142,89 @@ function updateMainRepoReadme(
   );
 }
 
+interface ExtraLangResult {
+  median: number;
+  ms: string;
+  output: string;
+  size?: number;
+}
+
+// Builds and measures one optional counterpart language (Go/Zig/Nim).
+// Returns null when the sources are absent (renders "n/a") or the
+// toolchain is missing; throws only on real build/run failures so a
+// broken counterpart fails the suite loudly instead of skewing it.
+function measureExtraLang(
+  label: string,
+  srcPath: string,
+  buildArgs: (exe: string) => string[],
+  iterations: number
+): ExtraLangResult | null {
+  if (!fs.existsSync(srcPath)) return null;
+  const exeExt = process.platform === "win32" ? ".exe" : "";
+  const exe = srcPath.replace(/\.[^.]+$/, `_x${exeExt}`);
+  const build = spawnSync(buildArgs(exe)[0], buildArgs(exe).slice(1), {
+    encoding: "utf-8",
+  });
+  if (build.status !== 0) {
+    try {
+      fs.unlinkSync(exe);
+    } catch {}
+    throw new Error(
+      `Failed to build ${label} ${srcPath}:\n${build.stderr || build.stdout}`
+    );
+  }
+  let size: number | undefined;
+  try {
+    if (fs.existsSync(exe)) size = fs.statSync(exe).size;
+  } catch {}
+  try {
+    const m = measureMedian(exe, [], iterations);
+    try {
+      fs.unlinkSync(exe);
+    } catch {}
+    return { median: m.median, ms: m.median.toFixed(1), output: m.output, size };
+  } catch (err) {
+    try {
+      fs.unlinkSync(exe);
+    } catch {}
+    throw err;
+  }
+}
+
+function extraVsAlya(
+  extraMedian: number | null,
+  alyaMedian: number
+): { markdown: string; text: string; speedup: number | null } {
+  if (extraMedian === null || !(extraMedian > 0)) {
+    return { markdown: "n/a", text: "n/a", speedup: null };
+  }
+  const speedup = extraMedian / alyaMedian;
+  if (alyaMedian <= extraMedian) {
+    return {
+      markdown: `**${speedup.toFixed(1)}x faster**`,
+      text: `${speedup.toFixed(1)}x faster`,
+      speedup,
+    };
+  }
+  return {
+    markdown: `\`${(1 / speedup).toFixed(1)}x slower\``,
+    text: `${(1 / speedup).toFixed(1)}x slower`,
+    speedup,
+  };
+}
+
 async function main() {
   const shouldUpdateReadme = process.argv.includes("--update-readme");
   const jsonOutput = process.argv.includes("--json");
+  // Regression gate (`bench:check`): run, compare Alya medians
+  // against history, exit 1 past the threshold. No state writes.
+  const checkMode = process.argv.includes("--check");
+  let checkThreshold = 25;
+  const thrIdx = process.argv.indexOf("--threshold");
+  if (thrIdx !== -1 && process.argv[thrIdx + 1]) {
+    const parsed = parseFloat(process.argv[thrIdx + 1]);
+    if (!isNaN(parsed) && parsed > 0) checkThreshold = parsed;
+  }
 
   // Suite selection: standard | comprehensive | all
   let suiteMode = "comprehensive";
@@ -1035,7 +1273,7 @@ async function main() {
       "             CROSS-LANGUAGE PERFORMANCE BENCHMARK SUITE                                "
     );
     console.log(
-      "             Alya vs C (GCC -O2) vs Bun (JavaScript JIT) vs Python 3.12                 "
+      "             Alya vs C (GCC -O2) vs Bun (JavaScript JIT) vs Python 3.12 vs Go vs Zig vs Nim      "
     );
     console.log(
       `             Suite: ${suiteMode.toUpperCase()} | Category: ${categoryFilter.toUpperCase()} (${
@@ -1063,6 +1301,15 @@ async function main() {
     const cSrcPath = resolveBenchPath(b.cSrc);
     const jsSrcPath = resolveBenchPath(b.jsSrc);
     const pySrcPath = resolveBenchPath(b.pySrc);
+    // Counterpart sources default to the jsSrc stem (`<name>.js` ->
+    // `<name>.go`, ...); explicit `goSrc`/`zigSrc`/`nimSrc` override.
+    const stem = b.jsSrc.replace(/\.js$/, "");
+    const goSrcPath = resolveBenchPath(b.goSrc ?? `${stem}.go`);
+    const zigSrcPath = resolveBenchPath(b.zigSrc ?? `${stem}.zig`);
+    const nimSrcPath = resolveBenchPath(b.nimSrc ?? `${stem}.nim`);
+    const goCmd = getLangCmd("go");
+    const zigCmd = getLangCmd("zig");
+    const nimCmd = getLangCmd("nim", ["--version"]);
 
     // 1. Compile Alya to binary
     const alyaExe = alyaSrcPath.replace(/\.alya$/, `_alya${exeExt}`);
@@ -1139,6 +1386,60 @@ async function main() {
       continue;
     }
 
+    // Optional counterparts: missing sources or toolchains render
+    // "n/a" (warn once); build/run failures are suite failures.
+    let goRes: ExtraLangResult | null = null;
+    let zigRes: ExtraLangResult | null = null;
+    let nimRes: ExtraLangResult | null = null;
+    try {
+      if (goCmd)
+        goRes = measureExtraLang("Go", goSrcPath, (exe) => [
+          goCmd,
+          "build",
+          "-o",
+          exe,
+          goSrcPath,
+        ], iterations);
+      else if (fs.existsSync(goSrcPath))
+        console.warn(`\n[WARNING] Go toolchain missing, skipping Go for ${b.name}`);
+      if (zigCmd)
+        zigRes = measureExtraLang("Zig", zigSrcPath, (exe) => [
+          zigCmd,
+          "build-exe",
+          "-O",
+          "ReleaseFast",
+          zigSrcPath,
+          `-femit-bin=${exe}`,
+        ], iterations);
+      else if (fs.existsSync(zigSrcPath))
+        console.warn(`\n[WARNING] Zig toolchain missing, skipping Zig for ${b.name}`);
+      if (nimCmd)
+        nimRes = measureExtraLang("Nim", nimSrcPath, (exe) => [
+          nimCmd,
+          "c",
+          "-d:release",
+          "--hints:off",
+          `--out:${exe}`,
+          nimSrcPath,
+        ], iterations);
+      else if (fs.existsSync(nimSrcPath))
+        console.warn(`\n[WARNING] Nim toolchain missing, skipping Nim for ${b.name}`);
+    } catch (err: any) {
+      console.error(
+        `\n[ERROR] Counterpart execution failed for ${b.name}: ${
+          err?.message || err
+        }`
+      );
+      try {
+        fs.unlinkSync(alyaExe);
+      } catch {}
+      try {
+        fs.unlinkSync(cExe);
+      } catch {}
+      hasFailures = true;
+      continue;
+    }
+
     // Cleanup binaries
     try {
       fs.unlinkSync(alyaExe);
@@ -1148,18 +1449,25 @@ async function main() {
     } catch {}
 
     // Validation
-    const allMatch = [
+    const coreOutputs = [
       cRes.output,
       alyaRes.output,
       bunRes.output,
       pyRes.output,
-    ].every((o) => o.includes(b.expected));
+    ];
+    if (goRes) coreOutputs.push(goRes.output);
+    if (zigRes) coreOutputs.push(zigRes.output);
+    if (nimRes) coreOutputs.push(nimRes.output);
+    const allMatch = coreOutputs.every((o) => o.includes(b.expected));
     if (!allMatch) {
       console.warn(
         `\n[WARNING] Output mismatch for ${b.name}! Expected ${b.expected}`
       );
       console.warn(
-        `C: ${cRes.output} | Alya: ${alyaRes.output} | Bun: ${bunRes.output} | Py: ${pyRes.output}`
+        `C: ${cRes.output} | Alya: ${alyaRes.output} | Bun: ${bunRes.output} | Py: ${pyRes.output}` +
+          (goRes ? ` | Go: ${goRes.output}` : "") +
+          (zigRes ? ` | Zig: ${zigRes.output}` : "") +
+          (nimRes ? ` | Nim: ${nimRes.output}` : "")
       );
       hasFailures = true;
     }
@@ -1169,7 +1477,12 @@ async function main() {
     const speedupVsBun = bunRes.median / alyaRes.median;
 
     const alyaVsC = overheadVsC.toFixed(1) + "x";
-    const alyaVsPy = speedupVsPy.toFixed(1) + "x faster";
+    // Direction-aware (a polluted/slow run must read "slower", never a
+    // "0.7x faster" lie): mirrors the Bun arm below.
+    const alyaVsPy =
+      speedupVsPy >= 1
+        ? speedupVsPy.toFixed(1) + "x faster"
+        : (1 / speedupVsPy).toFixed(1) + "x slower";
     const alyaVsBun =
       alyaRes.median <= bunRes.median
         ? `**${speedupVsBun.toFixed(1)}x faster**`
@@ -1180,7 +1493,14 @@ async function main() {
         ? `${speedupVsBun.toFixed(1)}x faster than Bun`
         : `${(1 / speedupVsBun).toFixed(1)}x slower than Bun`;
 
-    const pyText = `${speedupVsPy.toFixed(1)}x faster than Python`;
+    const pyText =
+      alyaRes.median <= pyRes.median
+        ? `${speedupVsPy.toFixed(1)}x faster than Python`
+        : `${(1 / speedupVsPy).toFixed(1)}x slower than Python`;
+
+    const vsGo = extraVsAlya(goRes?.median ?? null, alyaRes.median);
+    const vsZig = extraVsAlya(zigRes?.median ?? null, alyaRes.median);
+    const vsNim = extraVsAlya(nimRes?.median ?? null, alyaRes.median);
 
     let efficiencyTier = "🟢 Native Fast";
     if (overheadVsC <= 2.2) {
@@ -1202,19 +1522,40 @@ async function main() {
       alyaMedian: alyaRes.median,
       bunMedian: bunRes.median,
       pyMedian: pyRes.median,
+      goMedian: goRes?.median ?? null,
+      zigMedian: zigRes?.median ?? null,
+      nimMedian: nimRes?.median ?? null,
       cMs: cRes.median.toFixed(1),
       alyaMs: alyaRes.median.toFixed(1),
       bunMs: bunRes.median.toFixed(1),
       pyMs: pyRes.median.toFixed(1),
+      goMs: goRes ? goRes.ms : "n/a",
+      zigMs: zigRes ? zigRes.ms : "n/a",
+      nimMs: nimRes ? nimRes.ms : "n/a",
+      goCell: goRes ? `\`${goRes.ms} ms\`` : "n/a",
+      zigCell: zigRes ? `\`${zigRes.ms} ms\`` : "n/a",
+      nimCell: nimRes ? `\`${nimRes.ms} ms\`` : "n/a",
       vsC: alyaVsC,
       vsPy: alyaVsPy,
       vsBunMarkdown: alyaVsBun,
+      vsGoMarkdown: vsGo.markdown,
+      vsZigMarkdown: vsZig.markdown,
+      vsNimMarkdown: vsNim.markdown,
       bunText,
       pyText,
+      goText: vsGo.text,
+      zigText: vsZig.text,
+      nimText: vsNim.text,
       alyaBinaryBytes: alyaSize,
       cBinaryBytes: cSize,
+      goBinaryBytes: goRes?.size,
+      zigBinaryBytes: zigRes?.size,
+      nimBinaryBytes: nimRes?.size,
       speedupVsPy,
       speedupVsBun,
+      speedupVsGo: vsGo.speedup,
+      speedupVsZig: vsZig.speedup,
+      speedupVsNim: vsNim.speedup,
       overheadVsC,
       efficiencyTier,
     });
@@ -1226,8 +1567,53 @@ async function main() {
 
   const env = getTestEnvironment(alyaCompiler, pyCmd, iterations);
 
-  // Save JSON state
-  saveResultsJson(benchResults, env, iterations);
+  // Regression gate (skipped output writes below in check mode).
+  if (checkMode) {
+    const hist = readHistoryAlyaMs(env.os);
+    if (hist.length === 0) {
+      console.log(
+        "[CHECK] No history for this OS yet; this run becomes the baseline."
+      );
+    } else {
+      let regressions = 0;
+      for (const r of benchResults) {
+        const series = hist
+          .map((h) => h[r.id])
+          .filter((v) => typeof v === "number" && v > 0);
+        if (series.length === 0) {
+          console.log(`[CHECK] ${r.id}: no history, skip`);
+          continue;
+        }
+        series.sort((a, b) => a - b);
+        const base = series[Math.floor(series.length / 2)];
+        const now = parseFloat(r.alyaMs);
+        const delta = ((now - base) / base) * 100;
+        const bad = delta > checkThreshold;
+        if (bad) regressions++;
+        console.log(
+          `[CHECK] ${r.id}: base ${base.toFixed(1)}ms, now ${now.toFixed(
+            1
+          )}ms (${delta >= 0 ? "+" : ""}${delta.toFixed(1)}%) -> ${
+            bad ? "REGRESSION" : "ok"
+          }`
+        );
+      }
+      if (regressions > 0) {
+        console.error(
+          `[CHECK] ${regressions} regression(s) beyond +${checkThreshold}% of history median`
+        );
+        process.exit(1);
+      }
+      console.log(
+        `[CHECK] All workloads within +${checkThreshold}% of history median.`
+      );
+    }
+  }
+
+  // Save JSON state (skipped in check mode: checks read, never write)
+  if (!checkMode) {
+    saveResultsJson(benchResults, env, iterations);
+  }
 
   if (jsonOutput) {
     const geomeanVsPy = computeGeomean(benchResults.map((r) => r.speedupVsPy));
@@ -1235,6 +1621,15 @@ async function main() {
       benchResults.map((r) => r.speedupVsBun)
     );
     const geomeanVsC = computeGeomean(benchResults.map((r) => r.overheadVsC));
+    const geomeanVsGo = computeGeomean(
+      benchResults.map((r) => r.speedupVsGo ?? NaN)
+    );
+    const geomeanVsZig = computeGeomean(
+      benchResults.map((r) => r.speedupVsZig ?? NaN)
+    );
+    const geomeanVsNim = computeGeomean(
+      benchResults.map((r) => r.speedupVsNim ?? NaN)
+    );
     console.log(
       JSON.stringify(
         {
@@ -1243,6 +1638,9 @@ async function main() {
             geomeanSpeedupVsPython: geomeanVsPy,
             geomeanSpeedupVsBun: geomeanVsBun,
             geomeanOverheadVsC: geomeanVsC,
+            geomeanSpeedupVsGo: geomeanVsGo,
+            geomeanSpeedupVsZig: geomeanVsZig,
+            geomeanSpeedupVsNim: geomeanVsNim,
           },
           results: benchResults,
         },
@@ -1256,6 +1654,15 @@ async function main() {
   const geomeanVsPy = computeGeomean(benchResults.map((r) => r.speedupVsPy));
   const geomeanVsBun = computeGeomean(benchResults.map((r) => r.speedupVsBun));
   const geomeanVsC = computeGeomean(benchResults.map((r) => r.overheadVsC));
+  const geomeanVsGo = computeGeomean(
+    benchResults.map((r) => r.speedupVsGo ?? NaN)
+  );
+  const geomeanVsZig = computeGeomean(
+    benchResults.map((r) => r.speedupVsZig ?? NaN)
+  );
+  const geomeanVsNim = computeGeomean(
+    benchResults.map((r) => r.speedupVsNim ?? NaN)
+  );
 
   console.log(
     `\n=========================================================================================================`
@@ -1267,10 +1674,10 @@ async function main() {
     "========================================================================================================="
   );
   console.log(
-    "| Category     | Benchmark                         | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 |"
+    "| Category     | Benchmark                         | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 | Go | Zig | Nim |"
   );
   console.log(
-    "|:-------------|:----------------------------------|------------:|--------------:|-------------:|------------:|"
+    "|:-------------|:----------------------------------|------------:|--------------:|-------------:|------------:|---:|---:|---:|"
   );
 
   for (const r of benchResults) {
@@ -1279,7 +1686,9 @@ async function main() {
         33
       )} | ${`${r.cMs} ms`.padStart(11)} | ${`${r.alyaMs} ms`.padStart(
         13
-      )} | ${`${r.bunMs} ms`.padStart(12)} | ${`${r.pyMs} ms`.padStart(11)} |`
+      )} | ${`${r.bunMs} ms`.padStart(12)} | ${`${r.pyMs} ms`.padStart(
+        11
+      )} | ${r.goMs.padStart(7)} | ${r.zigMs.padStart(7)} | ${r.nimMs.padStart(7)} |`
     );
   }
 
@@ -1293,34 +1702,39 @@ async function main() {
     "========================================================================================================="
   );
   console.log(
-    "| Benchmark                         | vs Python (Speedup) | vs Bun (Speedup)    | vs C (Overhead) | Tier         |"
+    "| Benchmark                         | vs Python (Speedup) | vs Bun (Speedup)    | vs C (Overhead) | vs Go | vs Zig | vs Nim | Tier         |"
   );
   console.log(
-    "|:----------------------------------|--------------------:|--------------------:|----------------:|:-------------|"
+    "|:----------------------------------|--------------------:|--------------------:|----------------:|------:|------:|------:|:-------------|"
   );
   for (const r of benchResults) {
     console.log(
       `| ${r.name.padEnd(33)} | ${r.vsPy.padStart(19)} | ${r.bunText.padStart(
         19
-      )} | ${r.vsC.padStart(15)} | ${r.efficiencyTier.padEnd(12)} |`
+      )} | ${r.vsC.padStart(15)} | ${r.goText.padStart(9)} | ${r.zigText.padStart(
+        9
+      )} | ${r.nimText.padStart(9)} | ${r.efficiencyTier.padEnd(12)} |`
     );
   }
 
   console.log(
     "\n---------------------------------------------------------------------------------------------------------"
   );
+  const fmtSum = (g: number) => (g === 1.0 ? "n/a" : `${g.toFixed(1)}x`);
   console.log(
     ` SUMMARY (Geometric Mean): vs Python: ${geomeanVsPy.toFixed(
       1
     )}x faster | vs Bun: ${geomeanVsBun.toFixed(
       1
-    )}x faster | vs C: ${geomeanVsC.toFixed(1)}x of C`
+    )}x faster | vs C: ${geomeanVsC.toFixed(1)}x of C | vs Go: ${fmtSum(
+      geomeanVsGo
+    )} | vs Zig: ${fmtSum(geomeanVsZig)} | vs Nim: ${fmtSum(geomeanVsNim)}`
   );
   console.log(
     "---------------------------------------------------------------------------------------------------------\n"
   );
 
-  if (shouldUpdateReadme) {
+  if (shouldUpdateReadme && !checkMode) {
     let compilerRows: string[] | undefined;
     try {
       compilerRows = runCompilerBenchmarks();

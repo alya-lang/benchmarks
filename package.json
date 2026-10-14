@@ -14,6 +14,7 @@
     "bench:crypto": "bun run cross_lang/runner.ts --category crypto",
     "bench:bitwise": "bun run cross_lang/runner.ts --category bitwise",
     "bench:json": "bun run cross_lang/runner.ts --json",
+    "bench:check": "bun run cross_lang/runner.ts --check",
     "bench:update": "bun run cross_lang/runner.ts --update-readme"
   },
   "keywords": [

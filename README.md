@@ -1,6 +1,14 @@
 # Alya Benchmark Suite
 
-Comprehensive performance benchmarks evaluating both the **Alya Compiler (throughput)** and **Alya Runtime (native execution speed)** against established languages: **C (GCC -O2)**, **Bun (JavaScript JIT)**, and **Python 3.12**.
+Comprehensive performance benchmarks evaluating both the **Alya Compiler (throughput)** and **Alya Runtime (native execution speed)** against established languages: **C (GCC -O2)**, **Bun (JavaScript JIT)**, **Python 3.12**, **Go**, **Zig**, and **Nim**.
+
+## Contents
+
+- [Cross-Language Execution Performance](#-cross-language-execution-performance)
+- [Benchmark Details & Insights](#-benchmark-details--insights)
+- [Compiler Throughput Benchmarks](#-compiler-throughput-benchmarks-cargo-bench)
+- [How to Run the Benchmarks](#-how-to-run-the-benchmarks)
+- [Directory Structure](#-directory-structure)
 
 ---
 
@@ -17,6 +25,14 @@ All implementations solve the exact same algorithmic problem on identical inputs
 * **Measurement Methodology:** 1 warmup run, followed by 10 timed runs. Median execution time reported.
 
 ---
+
+### 📏 Methodology & Honesty Rules
+
+- Every implementation solves the same problem on identical inputs; its output is verified (`expected`) before any timing counts.
+- C is compiled `-O2`; Go builds plain, Zig `-O ReleaseFast`, Nim `-d:release`; Bun/Python run as-is.
+- **Losing rows are never removed.** A slower-than-Bun/Go/Zig/Nim cell is a finding, not an embarrassment — it becomes a compiler issue with the workload attached.
+- Numbers below regenerate on every run (`bun run bench:update`); this section and the per-workload notes are static text and survive regeneration.
+- History: every run appends one line to `state/history.jsonl`. `bun run bench:check` compares current Alya medians against the same-OS history median and fails past +25% (advisory in CI: signal first, block later).
 
 ### 🏆 Overall Performance Scorecard (Geomean Summary)
 
@@ -86,72 +102,72 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 ### 1. Recursive Fibonacci (`fib(30)`)
 * **Measures:** Function call overhead, standard ABI calling conventions, stack frame push/pop.
-* **Why Alya is Fast:** Alya emits native assembly (ARM64, x64) adhering strictly to platform ABIs with direct branch and link (`bl` / `call`) and return instructions. There are no virtual machine dispatch loops, garbage collection pauses, or interpreter frames.
+* **Notes:** Alya emits native assembly (ARM64, x64) adhering strictly to platform ABIs with direct branch and link (`bl` / `call`) and return instructions. There are no virtual machine dispatch loops, garbage collection pauses, or interpreter frames.
 * **Result:** **3.8x of C (-O2)**, **1.7x faster than Bun**, and **13.4x faster than Python**.
 
 ### 2. In-Place Quicksort (50,000 items)
 * **Measures:** In-place array mutation, cache locality, deep recursive partitioning.
-* **Why Alya is Fast:** Alya provides direct zero-overhead array index writes with native register swapping and minimal function call overhead.
+* **Notes:** Alya provides direct zero-overhead array index writes with native register swapping and minimal function call overhead.
 * **Result:** **8.1x of C (-O2)**, **2.4x slower than Bun**, and **3.2x faster than Python**.
 
 ### 3. Sieve of Eratosthenes (50,000 elements)
 * **Measures:** Memory allocation, dynamic array indexing, bounds safety overhead.
-* **Why Alya is Fast:** Alya performs single-comparison unsigned bounds checks (`b.hs` / `jae`) and calculates element addresses with native scaled base + index pointer arithmetic (`[x0, x1, lsl #3]` / `[rax + rbx*8]`).
+* **Notes:** Alya performs single-comparison unsigned bounds checks (`b.hs` / `jae`) and calculates element addresses with native scaled base + index pointer arithmetic (`[x0, x1, lsl #3]` / `[rax + rbx*8]`).
 * **Result:** **1.8x of C (-O2)**, **3.3x faster than Bun**, and **9.0x faster than Python**.
 
 ### 4. Collatz Conjecture (100,000 limit)
 * **Measures:** Deep conditional loops, integer arithmetic (`n % 2 == 0 ? n / 2 : 3 * n + 1`), zero-overhead branches.
-* **Why Alya is Fast:** Conditional modulo and bitwise checks compile directly to hardware branch prediction instructions (`test`/`jz` on x64), bypassing dynamic boxing or type dispatch.
+* **Notes:** Conditional modulo and bitwise checks compile directly to hardware branch prediction instructions (`test`/`jz` on x64), bypassing dynamic boxing or type dispatch.
 * **Result:** **3.9x of C (-O2)**, **1.4x slower than Bun**, and **12.5x faster than Python**.
 
 ### 5. Binary Search (100,000 items, 50,000 lookups)
 * **Measures:** Read-only array indexing, logarithmic binary partitioning, cache hit latency.
-* **Why Alya is Fast:** Direct memory indexing through native pointers without runtime wrapper overhead allows logarithmic search loops to achieve near-C throughput.
+* **Notes:** Direct memory indexing through native pointers without runtime wrapper overhead allows logarithmic search loops to achieve near-C throughput.
 * **Result:** **1.9x of C (-O2)**, **2.2x faster than Bun**, and **17.2x faster than Python**.
 
 ### 6. Binary Trees (Depth 14)
 * **Measures:** Dynamic memory allocation, recursive tree traversal, struct dereferencing, heap stress.
-* **Why Alya is Fast:** Alya allocates structs on a fast native heap with aligned word layouts, dereferencing fields with single-instruction displacement addressing (`[rax + offset]`).
+* **Notes:** Alya allocates structs on a fast native heap with aligned word layouts, dereferencing fields with single-instruction displacement addressing (`[rax + offset]`).
 * **Result:** **3.7x of C (-O2)**, **4.1x slower than Bun**, and **6.3x faster than Python**.
 
 ### 7. Hash Map Operations (20,000 items)
 * **Measures:** String hashing (djb2), bucket collisions, dynamic rehashing, key-value lookup throughput.
-* **Why Alya is Fast:** Built-in native hash table implementation with bitwise mask indexing and inline string equality checking.
+* **Notes:** Built-in native hash table implementation with bitwise mask indexing and inline string equality checking.
 * **Result:** **2.9x of C (-O2)**, **1.4x faster than Bun**, and **1.9x faster than Python**.
 
 ### 8. Mandelbrot Fractal (`200x100x200`)
 * **Measures:** Double-precision floating-point arithmetic (`f64`), tight nested loops, register persistence.
-* **Why Alya is Fast:** Alya binds 64-bit float operations directly to hardware floating-point registers (`d0-d2` on ARM64, `xmm0-xmm1` on x64) and fuses loop comparisons directly into single conditional branches.
+* **Notes:** Alya binds 64-bit float operations directly to hardware floating-point registers (`d0-d2` on ARM64, `xmm0-xmm1` on x64) and fuses loop comparisons directly into single conditional branches.
 * **Result:** **4.1x of C (-O2)**, **1.3x slower than Bun**, and **9.3x faster than Python**.
 
 ### 9. Matrix Multiplication (120x120)
 * **Measures:** CPU-bound 3-level nested loops, integer arithmetic, tight sequential memory access.
-* **Why Alya is Fast:** Inner loops are compiled directly to native register increments and conditional jumps with loop condition hoisting and zero branch misprediction penalty.
+* **Notes:** Inner loops are compiled directly to native register increments and conditional jumps with loop condition hoisting and zero branch misprediction penalty.
 * **Result:** **8.1x of C (-O2)**, **1.4x faster than Bun**, and **19.2x faster than Python**.
 
 ### 10. Monte Carlo Simulation (500,000 iterations)
 * **Measures:** Pseudorandom coordinate generation (LCG), integer / float bounding, loop iteration throughput.
-* **Why Alya is Fast:** Integer arithmetic compiles down to single-cycle CPU instructions (`imul`, `add`, `idiv`), executing half a million iterations in milliseconds.
+* **Notes:** Integer arithmetic compiles down to single-cycle CPU instructions (`imul`, `add`, `idiv`), executing half a million iterations in milliseconds.
 * **Result:** **1.6x of C (-O2)**, **1.9x faster than Bun**, and **27.0x faster than Python**.
 
 ### 11. FNV-1a String Hashing (50,000 iterations)
 * **Measures:** String iteration, character lookup (`char_at`, `ord`), bitwise XOR and integer multiplication.
-* **Why Alya is Fast:** Direct string index intrinsics bypass runtime function call overhead; bitwise masking is optimized natively (`ubfx` on ARM64, direct immediate bitwise ops on x64); and loop conditions use zero-overhead branch fusion.
+* **Notes:** Direct string index intrinsics bypass runtime function call overhead; bitwise masking is optimized natively (`ubfx` on ARM64, direct immediate bitwise ops on x64); and loop conditions use zero-overhead branch fusion.
 * **Result:** **1.9x of C (-O2)**, **1.5x faster than Bun**, and **47.0x faster than Python**.
 
 ### 12. Linked List Allocation (50,000 nodes)
 * **Measures:** Heap allocation velocity, sequential pointer dereferencing, struct field traversal, memory footprint.
-* **Why Alya is Fast:** Struct nodes are allocated on an optimized native heap with 8-byte word alignment and single-instruction displacement loads (`[rax + 8]`), eliminating GC cycle pauses and runtime type tagging.
+* **Notes:** Struct nodes are allocated on an optimized native heap with 8-byte word alignment and single-instruction displacement loads (`[rax + 8]`), eliminating GC cycle pauses and runtime type tagging.
 * **Result:** **1.1x of C (-O2)**, **2.4x faster than Bun**, and **9.3x faster than Python**.
 
 ### 13. RC4 Stream Cipher (100,000 bytes)
 * **Measures:** S-box permutation (KSA), pseudo-random byte stream generation (PRGA), state array swaps, and bitwise XOR encryption.
-* **Why Alya is Fast:** Array indexed reads and writes compile to single-cycle scaled index addressing without virtual machine dispatch or bounds boxing overhead.
+* **Notes:** Array indexed reads and writes compile to single-cycle scaled index addressing without virtual machine dispatch or bounds boxing overhead.
 * **Result:** **2.9x of C (-O2)**, **2.5x faster than Bun**, and **11.7x faster than Python**.
 
 ### 14. Kernighan Popcount (100,000 integers)
 * **Measures:** Bitwise AND (`x & (x - 1)`), bit clearing loops, LCG pseudorandom distribution.
-* **Why Alya is Fast:** Loop conditions and bitwise operations are fused directly into hardware `and`, `sub`, and conditional `jnz` instructions with zero intermediate boxing.
+* **Notes:** Loop conditions and bitwise operations are fused directly into hardware `and`, `sub`, and conditional `jnz` instructions with zero intermediate boxing.
 * **Result:** **1.8x of C (-O2)**, **2.2x faster than Bun**, and **33.1x faster than Python**.
 
 ---
@@ -190,7 +206,7 @@ Alya features a lightweight single-pass frontend with immediate native x64 assem
 ### Run Cross-Language Benchmark Suite
 Run with Bun using the configured scripts:
 ```bash
-# Run all benchmarks (comprehensive suite of 11 workloads)
+# Run all benchmarks (comprehensive suite of 14 workloads)
 bun run bench
 
 # Run standard suite only (4 quick benchmarks)
@@ -201,6 +217,12 @@ bun run bench:algorithms
 bun run bench:collections
 bun run bench:numeric
 bun run bench:strings
+bun run bench:memory
+bun run bench:crypto
+bun run bench:bitwise
+
+# Regression check against history (no state writes; exit 1 past +25%)
+bun run bench:check
 
 # Output structured JSON results to state/latest_results.json
 bun run bench:json
@@ -211,6 +233,10 @@ bun run cross_lang/runner.ts --iterations 10
 # Automatically benchmark and update README scoreboard
 bun run bench:update
 ```
+
+Counterpart toolchains: Go, Zig, and Nim implementations run when
+their toolchains are on PATH (CI installs all three); a missing
+toolchain renders `n/a` for that language instead of failing.
 
 ### Run Rust Compiler Throughput Benchmarks
 From the main [alya-lang/alya](https://github.com/alya-lang/alya) repository:
@@ -251,68 +277,26 @@ alya run cross_lang/algorithms/fibonacci.alya --time
 .
 ├── cross_lang/
 │   ├── algorithms/                 # Algorithmic, Sorting & Searching benchmarks
-│   │   ├── binary_search.alya      # Binary Search (100k items, 50k queries)
-│   │   ├── binary_search.c
-│   │   ├── binary_search.js
-│   │   ├── binary_search.py
-│   │   ├── collatz.alya            # Collatz Conjecture (100k limit)
-│   │   ├── collatz.c
-│   │   ├── collatz.js
-│   │   ├── collatz.py
-│   │   ├── fibonacci.alya          # Recursive Fibonacci (n=30)
-│   │   ├── fibonacci.c
-│   │   ├── fibonacci.js
-│   │   ├── fibonacci.py
-│   │   ├── quicksort.alya          # In-Place Quicksort (50,000 items)
-│   │   ├── quicksort.c
-│   │   ├── quicksort.js
-│   │   ├── quicksort.py
-│   │   ├── sieve.alya              # Sieve of Eratosthenes (50,000)
-│   │   ├── sieve.c
-│   │   ├── sieve.js
-│   │   └── sieve.py
+│   │   ├── binary_search.*      # Binary Search (100k items, 50k queries)
+│   │   ├── collatz.*            # Collatz Conjecture (100k limit)
+│   │   ├── fibonacci.*          # Recursive Fibonacci (n=30)
+│   │   ├── quicksort.*          # In-Place Quicksort (50,000 items)
+│   │   ├── sieve.*              # Sieve of Eratosthenes (50,000)
 │   ├── collections/                # Data structures & Heap allocations
-│   │   ├── binary_trees.alya       # Binary Trees (Depth 14)
-│   │   ├── binary_trees.c
-│   │   ├── binary_trees.js
-│   │   ├── binary_trees.py
-│   │   ├── hash_map.alya           # Hash Map Operations (20,000 items)
-│   │   ├── hash_map.c
-│   │   ├── hash_map.js
-│   │   └── hash_map.py
+│   │   ├── binary_trees.*       # Binary Trees (Depth 14)
+│   │   ├── hash_map.*           # Hash Map Operations (20,000 items)
 │   ├── numeric/                    # Numeric & Floating-Point compute
-│   │   ├── mandelbrot.alya         # Mandelbrot Fractal (200x100x200)
-│   │   ├── mandelbrot.c
-│   │   ├── mandelbrot.js
-│   │   ├── mandelbrot.py
-│   │   ├── matrix_mult.alya        # Matrix Multiplication (120x120)
-│   │   ├── matrix_mult.c
-│   │   ├── matrix_mult.js
-│   │   ├── matrix_mult.py
-│   │   ├── monte_carlo.alya        # Monte Carlo Simulation (500k iters)
-│   │   ├── monte_carlo.c
-│   │   ├── monte_carlo.js
-│   │   └── monte_carlo.py
+│   │   ├── mandelbrot.*         # Mandelbrot Fractal (200x100x200)
+│   │   ├── matrix_mult.*        # Matrix Multiplication (120x120)
+│   │   ├── monte_carlo.*        # Monte Carlo Simulation (500k iters)
 │   ├── strings/                    # String processing & Hashing
-│   │   ├── str_hash.alya           # FNV-1a String Hash (50,000 iters)
-│   │   ├── str_hash.c
-│   │   ├── str_hash.js
-│   │   └── str_hash.py
+│   │   ├── str_hash.*           # FNV-1a String Hash (50,000 iters)
 │   ├── memory/                     # Dynamic heap allocation & pointer traversal
-│   │   ├── linked_list.alya        # Linked List Churn (50,000 nodes)
-│   │   ├── linked_list.c
-│   │   ├── linked_list.js
-│   │   └── linked_list.py
+│   │   ├── linked_list.*        # Linked List Churn (50,000 nodes)
 │   ├── crypto/                     # Cryptographic stream ciphers & hashing
-│   │   ├── rc4.alya                # RC4 Stream Cipher (100,000 bytes)
-│   │   ├── rc4.c
-│   │   ├── rc4.js
-│   │   └── rc4.py
+│   │   ├── rc4.*                # RC4 Stream Cipher (100,000 bytes)
 │   ├── bitwise/                    # Low-level bitwise operations & popcount
-│   │   ├── popcount.alya           # Kernighan Popcount (100,000 ints)
-│   │   ├── popcount.c
-│   │   ├── popcount.js
-│   │   └── popcount.py
+│   │   ├── popcount.*           # Kernighan Popcount (100,000 ints)
 │   └── runner.ts                   # Automated test orchestrator, JSON state & markdown reporter
 ├── state/
 │   └── latest_results.json         # Automated JSON result state for CI tracking & history
