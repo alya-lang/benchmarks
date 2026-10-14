@@ -21,8 +21,12 @@ All implementations solve the exact same algorithmic problem on identical inputs
 * **C Compiler:** gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 (`-O2` optimization)
 * **JavaScript Engine:** Bun 1.4.3 (JavaScriptCore JIT)
 * **Python Runtime:** Python 3.12.15
-* **Alya Version:** 0.0.20 (Compiled with `alya build` in Release mode)
+* **Go Toolchain:** go version go1.27.2 linux/amd64
+* **Zig Toolchain:** 0.14.1
+* **Nim Toolchain:** not installed
+* **Alya Version:** 0.0.21 (Compiled with `alya build` in Release mode)
 * **Measurement Methodology:** 1 warmup run, followed by 10 timed runs. Median execution time reported.
+* **Reading This Page:** every implementation solves the same problem on identical inputs and its output is verified before timing. Losing rows are never removed: a slower cell is a finding, not an embarrassment. C is compiled `-O2`, Go/Zig/Nim at release settings, Bun/Python run as-is.
 
 ---
 
@@ -38,8 +42,8 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 | Metric | Alya (Native) | C (GCC -O2) | Bun (JS JIT) | Python 3.12 |
 | :--- | :---: | :---: | :---: | :---: |
-| **Geometric Mean Relative Speed** | **1.0x (Baseline)** | `0.35x` *(faster)* | `0.75x` | `0.09x` *(slower)* |
-| **Alya Relative Performance** | **Reference Target** | **~2.9x of C** | **1.3x faster** | **11.6x faster** |
+| **Geometric Mean Relative Speed** | **1.0x (Baseline)** | `0.34x` *(faster)* | `0.80x` | `0.09x` *(slower)* |
+| **Alya Relative Performance** | **Reference Target** | **~2.9x of C** | **1.2x faster** | **11.7x faster** |
 | **Runtime Architecture** | **Native AOT Binary** | Native AOT Binary | JIT + Runtime VM | Bytecode + Interpreter |
 | **Distribution / Executable Size** | **~90 KB – 350 KB** | ~50 KB – 100 KB | ~90 MB (runtime) | ~50 MB (runtime) |
 | **Cold-Start Startup Latency** | **< 2 ms** | < 1 ms | ~20 - 35 ms | ~30 - 55 ms |
@@ -49,12 +53,10 @@ All implementations solve the exact same algorithmic problem on identical inputs
 
 ### 🏆 Peer Scorecard: Go / Zig / Nim (Geomean Summary)
 
-Peer columns fill in on the next publishing run; `n/a` is the honest state until measured numbers exist.
-
 | Metric | Go | Zig | Nim |
 | :--- | :---: | :---: | :---: |
-| **Geometric Mean Relative Speed** | n/a | n/a | n/a |
-| **Alya Relative Performance** | n/a | n/a | n/a |
+| **Geometric Mean Relative Speed** | `2.01x` *(faster)* | `2.19x` *(faster)* | `2.33x` *(faster)* |
+| **Alya Relative Performance** | `2.0x slower than Go` | `2.2x slower than Zig` | `2.3x slower than Nim` |
 | **Runtime Architecture** | Native AOT Binary | Native AOT Binary | Native AOT (C backend) |
 | **Distribution / Executable Size** | ~2 MB (static) | ~100 KB – 500 KB | ~100 KB – 500 KB |
 | **Cold-Start Startup Latency** | < 5 ms | < 2 ms | < 5 ms |
@@ -66,43 +68,41 @@ Peer columns fill in on the next publishing run; `n/a` is the honest state until
 
 | Category | Benchmark | Target Workload | C (GCC -O2) | Alya (Native) | Bun (JS JIT) | Python 3.12 |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
-| `Algorithms` | **Recursive Fibonacci** | `fib(30)` (~2.69M calls) | `2.4 ms` | **`9.0 ms`** | `15.2 ms` | `120.2 ms` |
-| `Algorithms` | **In-Place Quicksort** | 50,000 items in-place sort | `3.9 ms` | **`31.6 ms`** | `12.9 ms` | `100.9 ms` |
-| `Algorithms` | **Sieve of Eratosthenes** | Primes under 50,000 | `1.1 ms` | **`2.1 ms`** | `6.7 ms` | `18.4 ms` |
-| `Algorithms` | **Collatz Conjecture** | Under 100k (~2.16M steps) | `15.0 ms` | **`59.1 ms`** | `43.4 ms` | `738.0 ms` |
-| `Algorithms` | **Binary Search** | 100k items, 50k lookups | `3.7 ms` | **`6.9 ms`** | `15.3 ms` | `118.9 ms` |
-| `Collections` | **Binary Trees** | Heap tree allocation & traversal | `125.7 ms` | **`468.5 ms`** | `113.7 ms` | `2944.3 ms` |
-| `Collections` | **Hash Map** | 20k insertions, updates & lookups | `4.6 ms` | **`13.4 ms`** | `18.5 ms` | `25.3 ms` |
-| `Numeric` | **Mandelbrot Fractal** | 200×100 grid, 200 iters | `3.2 ms` | **`13.1 ms`** | `10.3 ms` | `122.3 ms` |
-| `Numeric` | **Matrix Multiply** | 120×120 dense integer matrix mult | `1.2 ms` | **`10.0 ms`** | `14.4 ms` | `192.9 ms` |
-| `Numeric` | **Monte Carlo Simulation** | 500,000 iterations (Pi approx) | `3.9 ms` | **`6.3 ms`** | `12.0 ms` | `169.2 ms` |
-| `Strings` | **FNV-1a String Hash** | 50,000 hash calculations | `4.8 ms` | **`9.1 ms`** | `13.8 ms` | `427.0 ms` |
-| `Memory` | **Linked List Allocation** | 50k node alloc & traversal | `3.1 ms` | **`3.3 ms`** | `8.1 ms` | `31.0 ms` |
-| `Crypto` | **RC4 Stream Cipher** | 100k bytes KSA & PRGA stream | `1.1 ms` | **`3.2 ms`** | `7.8 ms` | `37.2 ms` |
-| `Bitwise` | **Kernighan Popcount** | 100k integers bit-clearing | `2.4 ms` | **`4.4 ms`** | `9.6 ms` | `146.7 ms` |
+| `Algorithms` | **Recursive Fibonacci** | `fib(30)` (~2.69M calls) | `2.3 ms` | **`8.8 ms`** | `15.9 ms` | `121.6 ms` |
+| `Algorithms` | **In-Place Quicksort** | 50,000 items in-place sort | `3.9 ms` | **`30.9 ms`** | `12.5 ms` | `98.4 ms` |
+| `Algorithms` | **Sieve of Eratosthenes** | Primes under 50,000 | `1.0 ms` | **`2.0 ms`** | `6.0 ms` | `16.7 ms` |
+| `Algorithms` | **Collatz Conjecture** | Under 100k (~2.16M steps) | `14.5 ms` | **`58.9 ms`** | `43.7 ms` | `739.4 ms` |
+| `Algorithms` | **Binary Search** | 100k items, 50k lookups | `3.6 ms` | **`6.6 ms`** | `14.9 ms` | `117.1 ms` |
+| `Collections` | **Binary Trees** | Heap tree allocation & traversal | `107.1 ms` | **`464.7 ms`** | `108.4 ms` | `2729.6 ms` |
+| `Collections` | **Hash Map** | 20k insertions, updates & lookups | `4.3 ms` | **`12.9 ms`** | `16.1 ms` | `24.2 ms` |
+| `Numeric` | **Mandelbrot Fractal** | 200×100 grid, 200 iters | `3.1 ms` | **`12.8 ms`** | `9.6 ms` | `131.4 ms` |
+| `Numeric` | **Matrix Multiply** | 120×120 dense integer matrix mult | `1.2 ms` | **`9.8 ms`** | `12.4 ms` | `190.8 ms` |
+| `Numeric` | **Monte Carlo Simulation** | 500,000 iterations (Pi approx) | `3.7 ms` | **`6.1 ms`** | `10.5 ms` | `169.7 ms` |
+| `Strings` | **FNV-1a String Hash** | 50,000 hash calculations | `4.7 ms` | **`9.0 ms`** | `12.7 ms` | `425.5 ms` |
+| `Memory` | **Linked List Allocation** | 50k node alloc & traversal | `3.0 ms` | **`3.0 ms`** | `6.6 ms` | `28.8 ms` |
+| `Crypto` | **RC4 Stream Cipher** | 100k bytes KSA & PRGA stream | `1.1 ms` | **`3.1 ms`** | `6.3 ms` | `35.6 ms` |
+| `Bitwise` | **Kernighan Popcount** | 100k integers bit-clearing | `2.3 ms` | **`4.3 ms`** | `8.3 ms` | `145.9 ms` |
 
 ---
 
 ### ⏱️ Execution Time: Systems Peers (Median of 10 runs, lower is better)
 
-Alya times repeat the table above for side-by-side reading; peer cells fill in on the next publishing run.
-
 | Category | Benchmark | Target Workload | Alya (Native) | Go | Zig | Nim |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
-| `Algorithms` | **Recursive Fibonacci** | `fib(30)` (~2.69M calls) | **`9.0 ms`** | n/a | n/a | n/a |
-| `Algorithms` | **In-Place Quicksort** | 50,000 items in-place sort | **`31.6 ms`** | n/a | n/a | n/a |
-| `Algorithms` | **Sieve of Eratosthenes** | Primes under 50,000 | **`2.1 ms`** | n/a | n/a | n/a |
-| `Algorithms` | **Collatz Conjecture** | Under 100k (~2.16M steps) | **`59.1 ms`** | n/a | n/a | n/a |
-| `Algorithms` | **Binary Search** | 100k items, 50k lookups | **`6.9 ms`** | n/a | n/a | n/a |
-| `Collections` | **Binary Trees** | Heap tree allocation & traversal | **`468.5 ms`** | n/a | n/a | n/a |
-| `Collections` | **Hash Map** | 20k insertions, updates & lookups | **`13.4 ms`** | n/a | n/a | n/a |
-| `Numeric` | **Mandelbrot Fractal** | 200×100 grid, 200 iters | **`13.1 ms`** | n/a | n/a | n/a |
-| `Numeric` | **Matrix Multiply** | 120×120 dense integer matrix mult | **`10.0 ms`** | n/a | n/a | n/a |
-| `Numeric` | **Monte Carlo Simulation** | 500,000 iterations (Pi approx) | **`6.3 ms`** | n/a | n/a | n/a |
-| `Strings` | **FNV-1a String Hash** | 50,000 hash calculations | **`9.1 ms`** | n/a | n/a | n/a |
-| `Memory` | **Linked List Allocation** | 50k node alloc & traversal | **`3.3 ms`** | n/a | n/a | n/a |
-| `Crypto` | **RC4 Stream Cipher** | 100k bytes KSA & PRGA stream | **`3.2 ms`** | n/a | n/a | n/a |
-| `Bitwise` | **Kernighan Popcount** | 100k integers bit-clearing | **`4.4 ms`** | n/a | n/a | n/a |
+| `Algorithms` | **Recursive Fibonacci** | `fib(30)` (~2.69M calls) | **`8.8 ms`** | `6.1 ms` | `2.8 ms` | `2.3 ms` |
+| `Algorithms` | **In-Place Quicksort** | 50,000 items in-place sort | **`30.9 ms`** | `4.9 ms` | `3.6 ms` | `4.8 ms` |
+| `Algorithms` | **Sieve of Eratosthenes** | Primes under 50,000 | **`2.0 ms`** | `1.6 ms` | `0.6 ms` | `1.1 ms` |
+| `Algorithms` | **Collatz Conjecture** | Under 100k (~2.16M steps) | **`58.9 ms`** | `19.0 ms` | `11.6 ms` | `21.8 ms` |
+| `Algorithms` | **Binary Search** | 100k items, 50k lookups | **`6.6 ms`** | `4.2 ms` | `3.6 ms` | `3.7 ms` |
+| `Collections` | **Binary Trees** | Heap tree allocation & traversal | **`464.7 ms`** | `163.3 ms` | `69733.6 ms` | `120.9 ms` |
+| `Collections` | **Hash Map** | 20k insertions, updates & lookups | **`12.9 ms`** | `7.0 ms` | `2.6 ms` | `5.2 ms` |
+| `Numeric` | **Mandelbrot Fractal** | 200×100 grid, 200 iters | **`12.8 ms`** | `3.9 ms` | `2.7 ms` | `3.1 ms` |
+| `Numeric` | **Matrix Multiply** | 120×120 dense integer matrix mult | **`9.8 ms`** | `2.8 ms` | `0.8 ms` | `3.3 ms` |
+| `Numeric` | **Monte Carlo Simulation** | 500,000 iterations (Pi approx) | **`6.1 ms`** | `5.8 ms` | `1.8 ms` | `4.8 ms` |
+| `Strings` | **FNV-1a String Hash** | 50,000 hash calculations | **`9.0 ms`** | `5.6 ms` | `0.3 ms` | `4.7 ms` |
+| `Memory` | **Linked List Allocation** | 50k node alloc & traversal | **`3.0 ms`** | `2.2 ms` | `376.2 ms` | `6.3 ms` |
+| `Crypto` | **RC4 Stream Cipher** | 100k bytes KSA & PRGA stream | **`3.1 ms`** | `1.8 ms` | `0.6 ms` | `1.1 ms` |
+| `Bitwise` | **Kernighan Popcount** | 100k integers bit-clearing | **`4.3 ms`** | `3.1 ms` | `0.4 ms` | `2.5 ms` |
 
 ---
 
@@ -110,20 +110,20 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 
 | Benchmark | vs Python 3.12 | vs Bun (JS JIT) | vs C (GCC -O2) | Efficiency Class |
 | :--- | :---: | :---: | :---: | :---: |
-| **Recursive Fibonacci** | **13.4x faster** | **1.7x faster** | **3.8x** | 🟢 Native Fast |
-| **In-Place Quicksort** | **3.2x faster** | `2.4x slower` | **8.1x** | 🟡 Near-Native |
-| **Sieve of Eratosthenes** | **9.0x faster** | **3.3x faster** | **1.8x** | 🟢 Near-C |
-| **Collatz Conjecture** | **12.5x faster** | `1.4x slower` | **3.9x** | 🟢 Native Fast |
-| **Binary Search** | **17.2x faster** | **2.2x faster** | **1.9x** | 🟢 Near-C |
-| **Binary Trees** | **6.3x faster** | `4.1x slower` | **3.7x** | 🟢 Native Fast |
-| **Hash Map** | **1.9x faster** | **1.4x faster** | **2.9x** | 🟢 Native Fast |
-| **Mandelbrot Fractal** | **9.3x faster** | `1.3x slower` | **4.1x** | 🟢 Native Fast |
-| **Matrix Multiply** | **19.2x faster** | **1.4x faster** | **8.1x** | 🟡 Near-Native |
-| **Monte Carlo Simulation** | **27.0x faster** | **1.9x faster** | **1.6x** | 🟢 Near-C |
-| **FNV-1a String Hash** | **47.0x faster** | **1.5x faster** | **1.9x** | 🟢 Near-C |
-| **Linked List Allocation** | **9.3x faster** | **2.4x faster** | **1.1x** | 🟢 Near-C |
-| **RC4 Stream Cipher** | **11.7x faster** | **2.5x faster** | **2.9x** | 🟢 Native Fast |
-| **Kernighan Popcount** | **33.1x faster** | **2.2x faster** | **1.8x** | 🟢 Near-C |
+| **Recursive Fibonacci** | **13.8x faster** | **1.8x faster** | **3.8x** | 🟢 Native Fast |
+| **In-Place Quicksort** | **3.2x faster** | `2.5x slower` | **8.0x** | 🟡 Near-Native |
+| **Sieve of Eratosthenes** | **8.5x faster** | **3.1x faster** | **2.1x** | 🟢 Near-C |
+| **Collatz Conjecture** | **12.6x faster** | `1.3x slower` | **4.1x** | 🟢 Native Fast |
+| **Binary Search** | **17.8x faster** | **2.3x faster** | **1.9x** | 🟢 Near-C |
+| **Binary Trees** | **5.9x faster** | `4.3x slower` | **4.3x** | 🟢 Native Fast |
+| **Hash Map** | **1.9x faster** | **1.2x faster** | **3.0x** | 🟢 Native Fast |
+| **Mandelbrot Fractal** | **10.3x faster** | `1.3x slower` | **4.1x** | 🟢 Native Fast |
+| **Matrix Multiply** | **19.6x faster** | **1.3x faster** | **8.1x** | 🟡 Near-Native |
+| **Monte Carlo Simulation** | **28.0x faster** | **1.7x faster** | **1.6x** | 🟢 Near-C |
+| **FNV-1a String Hash** | **47.4x faster** | **1.4x faster** | **1.9x** | 🟢 Near-C |
+| **Linked List Allocation** | **9.7x faster** | **2.2x faster** | **1.0x** | 🟢 Near-C |
+| **RC4 Stream Cipher** | **11.5x faster** | **2.1x faster** | **2.9x** | 🟢 Native Fast |
+| **Kernighan Popcount** | **34.2x faster** | **1.9x faster** | **1.8x** | 🟢 Near-C |
 
 ---
 
@@ -131,20 +131,20 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 
 | Benchmark | vs Go | vs Zig | vs Nim | Efficiency Class |
 | :--- | :---: | :---: | :---: | :---: |
-| **Recursive Fibonacci** | n/a | n/a | n/a | 🟢 Native Fast |
-| **In-Place Quicksort** | n/a | n/a | n/a | 🟡 Near-Native |
-| **Sieve of Eratosthenes** | n/a | n/a | n/a | 🟢 Near-C |
-| **Collatz Conjecture** | n/a | n/a | n/a | 🟢 Native Fast |
-| **Binary Search** | n/a | n/a | n/a | 🟢 Near-C |
-| **Binary Trees** | n/a | n/a | n/a | 🟢 Native Fast |
-| **Hash Map** | n/a | n/a | n/a | 🟢 Native Fast |
-| **Mandelbrot Fractal** | n/a | n/a | n/a | 🟢 Native Fast |
-| **Matrix Multiply** | n/a | n/a | n/a | 🟡 Near-Native |
-| **Monte Carlo Simulation** | n/a | n/a | n/a | 🟢 Near-C |
-| **FNV-1a String Hash** | n/a | n/a | n/a | 🟢 Near-C |
-| **Linked List Allocation** | n/a | n/a | n/a | 🟢 Near-C |
-| **RC4 Stream Cipher** | n/a | n/a | n/a | 🟢 Native Fast |
-| **Kernighan Popcount** | n/a | n/a | n/a | 🟢 Near-C |
+| **Recursive Fibonacci** | `1.4x slower` | `3.2x slower` | `3.8x slower` | 🟢 Native Fast |
+| **In-Place Quicksort** | `6.4x slower` | `8.7x slower` | `6.5x slower` | 🟡 Near-Native |
+| **Sieve of Eratosthenes** | `1.2x slower` | `3.2x slower` | `1.8x slower` | 🟢 Near-C |
+| **Collatz Conjecture** | `3.1x slower` | `5.1x slower` | `2.7x slower` | 🟢 Native Fast |
+| **Binary Search** | `1.6x slower` | `1.9x slower` | `1.8x slower` | 🟢 Near-C |
+| **Binary Trees** | `2.8x slower` | **150.1x faster** | `3.8x slower` | 🟢 Native Fast |
+| **Hash Map** | `1.8x slower` | `5.0x slower` | `2.5x slower` | 🟢 Native Fast |
+| **Mandelbrot Fractal** | `3.3x slower` | `4.8x slower` | `4.1x slower` | 🟢 Native Fast |
+| **Matrix Multiply** | `3.5x slower` | `12.0x slower` | `3.0x slower` | 🟡 Near-Native |
+| **Monte Carlo Simulation** | `1.1x slower` | `3.3x slower` | `1.3x slower` | 🟢 Near-C |
+| **FNV-1a String Hash** | `1.6x slower` | `26.0x slower` | `1.9x slower` | 🟢 Near-C |
+| **Linked List Allocation** | `1.4x slower` | **126.4x faster** | **2.1x faster** | 🟢 Near-C |
+| **RC4 Stream Cipher** | `1.7x slower` | `5.1x slower` | `2.8x slower` | 🟢 Native Fast |
+| **Kernighan Popcount** | `1.4x slower` | `10.4x slower` | `1.7x slower` | 🟢 Near-C |
 
 ---
 
@@ -165,7 +165,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 1. Recursive Fibonacci (`fib(30)`)
 * **Measures:** Function call overhead, standard ABI calling conventions, stack frame push/pop.
 * **Notes:** Alya emits native assembly (ARM64, x64) adhering strictly to platform ABIs with direct branch and link (`bl` / `call`) and return instructions. There are no virtual machine dispatch loops, garbage collection pauses, or interpreter frames.
-* **Result:** **3.8x of C (-O2)**, **1.7x faster than Bun**, and **13.4x faster than Python**.
+* **Result:** **3.8x of C (-O2)**, **1.8x faster than Bun**, and **13.8x faster than Python**, **1.4x slower vs Go**, **3.2x slower vs Zig**, **3.8x slower vs Nim**.
 
 </details>
 
@@ -176,7 +176,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 2. In-Place Quicksort (50,000 items)
 * **Measures:** In-place array mutation, cache locality, deep recursive partitioning.
 * **Notes:** Alya provides direct zero-overhead array index writes with native register swapping and minimal function call overhead.
-* **Result:** **8.1x of C (-O2)**, **2.4x slower than Bun**, and **3.2x faster than Python**.
+* **Result:** **8.0x of C (-O2)**, **2.5x slower than Bun**, and **3.2x faster than Python**, **6.4x slower vs Go**, **8.7x slower vs Zig**, **6.5x slower vs Nim**.
 
 </details>
 
@@ -187,7 +187,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 3. Sieve of Eratosthenes (50,000 elements)
 * **Measures:** Memory allocation, dynamic array indexing, bounds safety overhead.
 * **Notes:** Alya performs single-comparison unsigned bounds checks (`b.hs` / `jae`) and calculates element addresses with native scaled base + index pointer arithmetic (`[x0, x1, lsl #3]` / `[rax + rbx*8]`).
-* **Result:** **1.8x of C (-O2)**, **3.3x faster than Bun**, and **9.0x faster than Python**.
+* **Result:** **2.1x of C (-O2)**, **3.1x faster than Bun**, and **8.5x faster than Python**, **1.2x slower vs Go**, **3.2x slower vs Zig**, **1.8x slower vs Nim**.
 
 </details>
 
@@ -198,7 +198,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 4. Collatz Conjecture (100,000 limit)
 * **Measures:** Deep conditional loops, integer arithmetic (`n % 2 == 0 ? n / 2 : 3 * n + 1`), zero-overhead branches.
 * **Notes:** Conditional modulo and bitwise checks compile directly to hardware branch prediction instructions (`test`/`jz` on x64), bypassing dynamic boxing or type dispatch.
-* **Result:** **3.9x of C (-O2)**, **1.4x slower than Bun**, and **12.5x faster than Python**.
+* **Result:** **4.1x of C (-O2)**, **1.3x slower than Bun**, and **12.6x faster than Python**, **3.1x slower vs Go**, **5.1x slower vs Zig**, **2.7x slower vs Nim**.
 
 </details>
 
@@ -209,7 +209,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 5. Binary Search (100,000 items, 50,000 lookups)
 * **Measures:** Read-only array indexing, logarithmic binary partitioning, cache hit latency.
 * **Notes:** Direct memory indexing through native pointers without runtime wrapper overhead allows logarithmic search loops to achieve near-C throughput.
-* **Result:** **1.9x of C (-O2)**, **2.2x faster than Bun**, and **17.2x faster than Python**.
+* **Result:** **1.9x of C (-O2)**, **2.3x faster than Bun**, and **17.8x faster than Python**, **1.6x slower vs Go**, **1.9x slower vs Zig**, **1.8x slower vs Nim**.
 
 </details>
 
@@ -220,7 +220,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 6. Binary Trees (Depth 14)
 * **Measures:** Dynamic memory allocation, recursive tree traversal, struct dereferencing, heap stress.
 * **Notes:** Alya allocates structs on a fast native heap with aligned word layouts, dereferencing fields with single-instruction displacement addressing (`[rax + offset]`).
-* **Result:** **3.7x of C (-O2)**, **4.1x slower than Bun**, and **6.3x faster than Python**.
+* **Result:** **4.3x of C (-O2)**, **4.3x slower than Bun**, and **5.9x faster than Python**, **2.8x slower vs Go**, **150.1x faster vs Zig**, **3.8x slower vs Nim**.
 
 </details>
 
@@ -231,7 +231,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 7. Hash Map Operations (20,000 items)
 * **Measures:** String hashing (djb2), bucket collisions, dynamic rehashing, key-value lookup throughput.
 * **Notes:** Built-in native hash table implementation with bitwise mask indexing and inline string equality checking.
-* **Result:** **2.9x of C (-O2)**, **1.4x faster than Bun**, and **1.9x faster than Python**.
+* **Result:** **3.0x of C (-O2)**, **1.2x faster than Bun**, and **1.9x faster than Python**, **1.8x slower vs Go**, **5.0x slower vs Zig**, **2.5x slower vs Nim**.
 
 </details>
 
@@ -242,7 +242,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 8. Mandelbrot Fractal (`200x100x200`)
 * **Measures:** Double-precision floating-point arithmetic (`f64`), tight nested loops, register persistence.
 * **Notes:** Alya binds 64-bit float operations directly to hardware floating-point registers (`d0-d2` on ARM64, `xmm0-xmm1` on x64) and fuses loop comparisons directly into single conditional branches.
-* **Result:** **4.1x of C (-O2)**, **1.3x slower than Bun**, and **9.3x faster than Python**.
+* **Result:** **4.1x of C (-O2)**, **1.3x slower than Bun**, and **10.3x faster than Python**, **3.3x slower vs Go**, **4.8x slower vs Zig**, **4.1x slower vs Nim**.
 
 </details>
 
@@ -253,7 +253,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 9. Matrix Multiplication (120x120)
 * **Measures:** CPU-bound 3-level nested loops, integer arithmetic, tight sequential memory access.
 * **Notes:** Inner loops are compiled directly to native register increments and conditional jumps with loop condition hoisting and zero branch misprediction penalty.
-* **Result:** **8.1x of C (-O2)**, **1.4x faster than Bun**, and **19.2x faster than Python**.
+* **Result:** **8.1x of C (-O2)**, **1.3x faster than Bun**, and **19.6x faster than Python**, **3.5x slower vs Go**, **12.0x slower vs Zig**, **3.0x slower vs Nim**.
 
 </details>
 
@@ -264,7 +264,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 10. Monte Carlo Simulation (500,000 iterations)
 * **Measures:** Pseudorandom coordinate generation (LCG), integer / float bounding, loop iteration throughput.
 * **Notes:** Integer arithmetic compiles down to single-cycle CPU instructions (`imul`, `add`, `idiv`), executing half a million iterations in milliseconds.
-* **Result:** **1.6x of C (-O2)**, **1.9x faster than Bun**, and **27.0x faster than Python**.
+* **Result:** **1.6x of C (-O2)**, **1.7x faster than Bun**, and **28.0x faster than Python**, **1.1x slower vs Go**, **3.3x slower vs Zig**, **1.3x slower vs Nim**.
 
 </details>
 
@@ -275,7 +275,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 11. FNV-1a String Hashing (50,000 iterations)
 * **Measures:** String iteration, character lookup (`char_at`, `ord`), bitwise XOR and integer multiplication.
 * **Notes:** Direct string index intrinsics bypass runtime function call overhead; bitwise masking is optimized natively (`ubfx` on ARM64, direct immediate bitwise ops on x64); and loop conditions use zero-overhead branch fusion.
-* **Result:** **1.9x of C (-O2)**, **1.5x faster than Bun**, and **47.0x faster than Python**.
+* **Result:** **1.9x of C (-O2)**, **1.4x faster than Bun**, and **47.4x faster than Python**, **1.6x slower vs Go**, **26.0x slower vs Zig**, **1.9x slower vs Nim**.
 
 </details>
 
@@ -286,7 +286,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 12. Linked List Allocation (50,000 nodes)
 * **Measures:** Heap allocation velocity, sequential pointer dereferencing, struct field traversal, memory footprint.
 * **Notes:** Struct nodes are allocated on an optimized native heap with 8-byte word alignment and single-instruction displacement loads (`[rax + 8]`), eliminating GC cycle pauses and runtime type tagging.
-* **Result:** **1.1x of C (-O2)**, **2.4x faster than Bun**, and **9.3x faster than Python**.
+* **Result:** **1.0x of C (-O2)**, **2.2x faster than Bun**, and **9.7x faster than Python**, **1.4x slower vs Go**, **126.4x faster vs Zig**, **2.1x faster vs Nim**.
 
 </details>
 
@@ -297,7 +297,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 13. RC4 Stream Cipher (100,000 bytes)
 * **Measures:** S-box permutation (KSA), pseudo-random byte stream generation (PRGA), state array swaps, and bitwise XOR encryption.
 * **Notes:** Array indexed reads and writes compile to single-cycle scaled index addressing without virtual machine dispatch or bounds boxing overhead.
-* **Result:** **2.9x of C (-O2)**, **2.5x faster than Bun**, and **11.7x faster than Python**.
+* **Result:** **2.9x of C (-O2)**, **2.1x faster than Bun**, and **11.5x faster than Python**, **1.7x slower vs Go**, **5.1x slower vs Zig**, **2.8x slower vs Nim**.
 
 </details>
 
@@ -308,7 +308,7 @@ Alya times repeat the table above for side-by-side reading; peer cells fill in o
 ### 14. Kernighan Popcount (100,000 integers)
 * **Measures:** Bitwise AND (`x & (x - 1)`), bit clearing loops, LCG pseudorandom distribution.
 * **Notes:** Loop conditions and bitwise operations are fused directly into hardware `and`, `sub`, and conditional `jnz` instructions with zero intermediate boxing.
-* **Result:** **1.8x of C (-O2)**, **2.2x faster than Bun**, and **33.1x faster than Python**.
+* **Result:** **1.8x of C (-O2)**, **1.9x faster than Bun**, and **34.2x faster than Python**, **1.4x slower vs Go**, **10.4x slower vs Zig**, **1.7x slower vs Nim**.
 
 </details>
 

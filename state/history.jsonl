@@ -1,0 +1,1 @@
+{"timestamp":"2026-10-14T02:54:03.445Z","os":"Ubuntu 24.04.5 LTS (x64)","alya":"0.0.21","iterations":10,"alyaMs":{"fib":8.8,"quicksort":30.9,"sieve":2,"collatz":58.9,"binary_search":6.6,"binary_trees":464.7,"hash_map":12.9,"mandelbrot":12.8,"matrix_mult":9.8,"monte_carlo":6.1,"str_hash":9,"linked_list":3,"rc4":3.1,"popcount":4.3}}
