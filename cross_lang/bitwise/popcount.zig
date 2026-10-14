@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn main() void {
+pub fn main() !void {
     var total_bits: i64 = 0;
     var seed: i64 = 42;
     var i: i64 = 0;
@@ -14,5 +14,6 @@ pub fn main() void {
         }
         total_bits += count;
     }
-    std.debug.print("{d}\n", .{total_bits});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{total_bits});
 }

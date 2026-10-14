@@ -51,5 +51,6 @@ pub fn main() !void {
     }
     total += checkTree(long_lived);
     freeTree(long_lived);
-    std.debug.print("{d}\n", .{total});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{total});
 }

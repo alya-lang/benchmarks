@@ -67,5 +67,6 @@ pub fn main() !void {
         const key = try std.fmt.bufPrint(&buf, "key_{d}", .{i});
         sum += mapGet(table, key);
     }
-    std.debug.print("{d}\n", .{sum});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{sum});
 }

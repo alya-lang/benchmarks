@@ -38,5 +38,6 @@ pub fn main() !void {
     }
     quicksort(arr, 0, @intCast(n - 1));
     const sum: i64 = arr[0] + arr[25000] + arr[n - 1];
-    std.debug.print("{d}\n", .{sum});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{sum});
 }

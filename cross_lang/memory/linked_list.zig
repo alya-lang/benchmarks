@@ -21,5 +21,6 @@ pub fn main() !void {
         cur = n.next;
         std.heap.page_allocator.destroy(tmp);
     }
-    std.debug.print("{d}\n", .{sum});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{sum});
 }

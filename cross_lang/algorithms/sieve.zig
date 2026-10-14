@@ -18,5 +18,6 @@ pub fn main() !void {
     for (flags[2..]) |f| {
         if (f == 1) count += 1;
     }
-    std.debug.print("{d}\n", .{count});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{count});
 }

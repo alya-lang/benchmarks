@@ -15,7 +15,7 @@ fn mandelbrotPoint(cr: f64, ci: f64, max_iter: i32) i32 {
     return max_iter;
 }
 
-pub fn main() void {
+pub fn main() !void {
     const width: i32 = 200;
     const height: i32 = 100;
     const max_iter: i32 = 200;
@@ -29,5 +29,6 @@ pub fn main() void {
             total += mandelbrotPoint(cr, ci, max_iter);
         }
     }
-    std.debug.print("{d}\n", .{total});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{total});
 }

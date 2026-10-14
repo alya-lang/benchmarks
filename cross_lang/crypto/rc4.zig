@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn main() void {
+pub fn main() !void {
     const key = "SecretAlyaKey2026";
     var s: [256]u8 = undefined;
     for (&s, 0..) |*b, k| b.* = @intCast(k);
@@ -24,5 +24,6 @@ pub fn main() void {
         const data_byte: u8 = @intCast((step * 31) % 256);
         checksum += data_byte ^ stream_byte;
     }
-    std.debug.print("{d}\n", .{checksum});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{checksum});
 }

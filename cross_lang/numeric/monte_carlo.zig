@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn main() void {
+pub fn main() !void {
     var total_in: i64 = 0;
     var seed: i64 = 42;
     var i: i64 = 0;
@@ -13,5 +13,6 @@ pub fn main() void {
         const y = seed;
         if (x * x + y * y <= 1073741824) total_in += 1;
     }
-    std.debug.print("{d}\n", .{total_in});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{total_in});
 }

@@ -14,12 +14,13 @@ fn collatzLen(n: i64) i64 {
     return steps;
 }
 
-pub fn main() void {
+pub fn main() !void {
     var max_len: i64 = 0;
     var i: i64 = 1;
     while (i < 100000) : (i += 1) {
         const len = collatzLen(i);
         if (len > max_len) max_len = len;
     }
-    std.debug.print("{d}\n", .{max_len});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{max_len});
 }

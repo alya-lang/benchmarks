@@ -5,6 +5,7 @@ fn fib(n: i64) i64 {
     return fib(n - 1) + fib(n - 2);
 }
 
-pub fn main() void {
-    std.debug.print("{d}\n", .{fib(30)});
+pub fn main() !void {
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{fib(30)});
 }

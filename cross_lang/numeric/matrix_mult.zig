@@ -26,5 +26,6 @@ pub fn main() !void {
     }
     var total: i64 = 0;
     for (c) |v| total += v;
-    std.debug.print("{d}\n", .{total});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{total});
 }

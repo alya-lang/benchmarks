@@ -29,5 +29,6 @@ pub fn main() !void {
         const res = binarySearch(arr, n, target);
         if (res >= 0) idx_sum += res;
     }
-    std.debug.print("{d}\n", .{idx_sum});
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d}\n", .{idx_sum});
 }
