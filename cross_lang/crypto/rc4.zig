@@ -20,7 +20,10 @@ pub fn main() !void {
         const tmp = s[i];
         s[i] = s[j];
         s[j] = tmp;
-        const stream_byte = s[@as(usize, (s[i] +% s[j]) % 256)];
+        // Full-width sum before the mod: `(s[i] +% s[j]) % 256` does
+        // not compile (256 is unrepresentable in u8).
+        const sij: usize = @as(usize, s[i]) + @as(usize, s[j]);
+        const stream_byte = s[sij % 256];
         const data_byte: u8 = @intCast((step * 31) % 256);
         checksum += data_byte ^ stream_byte;
     }

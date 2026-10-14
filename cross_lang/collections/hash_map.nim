@@ -9,10 +9,12 @@ type Entry = object
   occupied: bool
 
 proc djb2(s: string): uint32 =
-  var h = 5381'u32
+  # Plain int64 arithmetic with an explicit mod: values stay small
+  # (h < 2^32 throughout), so no wraparound semantics are needed.
+  var h: int64 = 5381
   for c in s:
-    h = h *% 33 +% ord(c).uint32
-  h
+    h = (h * 33 + ord(c)) mod 4294967296
+  h.uint32
 
 proc mapSet(table: var seq[Entry], key: string, val: int) =
   var idx = (djb2(key) and Mask.uint32).int
