@@ -135,7 +135,9 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: master
+          # Pinned stable: benchmarks must reproduce, not track
+          # master (whose std API keeps shifting, e.g. std.io).
+          version: 0.14.1
 
       - name: Setup Nim
         shell: bash
